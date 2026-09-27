@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "manifest",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  // Only the custom domain serves traffic: no *.workers.dev URL, no per-version preview URLs.
+  // Self-hosting without a domain: delete "routes" and set "workers_dev" to true.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "m.productivitymarket.work", "custom_domain": true }],
+  "kv_namespaces": [
+    // Filled in by `wrangler kv namespace create manifest-pages` during setup.
+    { "binding": "PAGES", "id": "8b259c7705ed47039c5b405aff6b26b4" }
+  ],
+  // Page slugs are the only thing keeping pages private, so keep request logs off.
+  "observability": { "enabled": false }
+  // Secret, set with `wrangler secret put PUBLISH_TOKEN`: PUBLISH_TOKEN
+}

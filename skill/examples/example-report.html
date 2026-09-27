@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>Ingest API outage on 12 September</title>
+<style>
+/* ==========================================================================
+   Quire, the manifest design language. Tokens first, then components.
+   Do not add colors, sizes or fonts outside these tokens. See design/DESIGN.md.
+   ========================================================================== */
+:root {
+  color-scheme: light dark;
+
+  /* Neutrals */
+  --bg: #ffffff;
+  --surface: #f5f5f3;
+  --ink: #1b1c20;
+  --ink-2: #4b4d55;
+  --ink-3: #6b6d76;
+  --line: #e3e3df;
+  --line-2: #c9c9c4;
+  --control-border: #8a8c93; /* form controls: 3:1 against --bg (WCAG 1.4.11) */
+
+  /* Accent: links, focus, primary button, first chart series */
+  --accent: #0b6c78;
+  --accent-ink: #085660;
+  --accent-soft: #e6f2f3;
+
+  /* Semantic, used only where a state means something */
+  --ok: #2f6f3e;   --ok-soft: #e8f2ea;
+  --warn: #8f5a00; --warn-soft: #f9f0dc;
+  --bad: #a83a32;  --bad-soft: #f8e7e5;
+
+  /* Charts: at most three series */
+  --chart-1: var(--accent);
+  --chart-2: #8d8f97;
+  --chart-3: #a87414;
+  --chart-grid: var(--line);
+
+  /* Type */
+  --font-text: Charter, "Iowan Old Style", "Source Serif 4", "Source Serif Pro", Georgia, "Noto Serif", serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --text: 1.0625rem;   /* 17px body */
+  --text-lh: 1.55;
+  --small: 0.875rem;   /* 14px: tables, captions, meta, controls */
+  --xs: 0.8125rem;     /* 13px: badges, chart labels */
+  --h1: 2rem;
+  --h2: 1.375rem;
+  --h3: 1.0625rem;
+  --summary: 1.25rem;
+  --stat: 1.75rem;
+
+  /* Space (4px base) */
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem;
+  --s5: 1.5rem;  --s6: 2rem;   --s7: 3rem;    --s8: 4rem;
+
+  /* Layout */
+  --measure: 38rem;   /* prose column, about 75 characters */
+  --wide: 58rem;      /* tables, figures, stat rows with .wide */
+  --gutter: 1.25rem;
+  --radius: 4px;
+  --focus: 2px solid var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181c;
+    --surface: #1f2126;
+    --ink: #e7e7e4;
+    --ink-2: #b4b5ba;
+    --ink-3: #8b8d94;
+    --line: #2c2e35;
+    --line-2: #44464e;
+    --control-border: #6e7078;
+    --accent: #6fc6d1;
+    --accent-ink: #9ad9e1;
+    --accent-soft: #1a2f33;
+    --ok: #7fc48f;   --ok-soft: #1c2a1f;
+    --warn: #e0b05a; --warn-soft: #2e2717;
+    --bad: #ef8a82;  --bad-soft: #33201f;
+    --chart-2: #8d8f97;
+    --chart-3: #d7a24a;
+  }
+}
+@media (max-width: 40rem) {
+  :root {
+    --text: 1rem;
+    --h1: 1.625rem;
+    --h2: 1.25rem;
+    --summary: 1.125rem;
+    --stat: 1.5rem;
+    --gutter: 1rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0 auto;
+  max-width: calc(var(--wide) + 2 * var(--gutter));
+  padding: 0 var(--gutter) var(--s7);
+  font-family: var(--font-text);
+  font-size: var(--text);
+  line-height: var(--text-lh);
+  color: var(--ink);
+  background: var(--bg);
+}
+:focus-visible { outline: var(--focus); outline-offset: 2px; }
+::selection { background: var(--accent-soft); }
+img, svg, video { max-width: 100%; height: auto; }
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { transition: none !important; animation: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Headings and text
+   -------------------------------------------------------------------------- */
+h1, h2, h3, h4 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-block: 0;
+  text-wrap: balance;
+}
+h1 { font-size: var(--h1); letter-spacing: -0.02em; margin-bottom: var(--s3); }
+h2 { font-size: var(--h2); margin-top: var(--s7); margin-bottom: var(--s3); }
+h3 { font-size: var(--h3); margin-top: var(--s6); margin-bottom: var(--s2); }
+h4 { font-size: var(--small); margin-top: var(--s5); margin-bottom: var(--s2); color: var(--ink-2); }
+h2 + h3 { margin-top: var(--s4); }
+p { margin-block: 0 var(--s4); text-wrap: pretty; }
+ul, ol { margin-block: 0 var(--s4); padding-left: 1.4rem; }
+li { margin-bottom: var(--s1); }
+li > ul, li > ol { margin-top: var(--s1); margin-bottom: 0; }
+strong, b { font-weight: 700; }
+small { font-size: var(--small); }
+blockquote {
+  margin-block: 0 var(--s4);
+  padding-left: var(--s4);
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+}
+blockquote > :last-child { margin-bottom: 0; }
+hr { border: 0; border-top: 1px solid var(--line); margin-block: var(--s6); }
+abbr[title] { text-decoration: underline dotted; text-underline-offset: 0.15em; }
+.muted { color: var(--ink-3); }
+.ui { font-family: var(--font-ui); }
+.num, .tabular { font-variant-numeric: tabular-nums; }
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+a:hover { color: var(--accent-ink); text-decoration-color: currentColor; }
+.link-more {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--small);
+  text-decoration: none;
+}
+.link-more::after { content: " \2192"; }
+.link-more:hover { text-decoration: underline; }
+.ext::after { content: "\202F\2197"; font-family: var(--font-ui); font-size: 0.8em; }
+
+/* --------------------------------------------------------------------------
+   Document header and footer
+   -------------------------------------------------------------------------- */
+.doc-header {
+  padding-top: var(--s7);
+  padding-bottom: var(--s5);
+  margin-bottom: var(--s6);
+  border-bottom: 1px solid var(--line-2);
+}
+.summary {
+  font-size: var(--summary);
+  line-height: 1.4;
+  color: var(--ink-2);
+  margin-block: 0 var(--s4);
+}
+.meta {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+  margin-block: 0;
+}
+.meta > * + *::before {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 0.9em;
+  background: var(--line-2);
+  margin-right: var(--s4);
+  vertical-align: -0.1em;
+}
+.meta > .badge::before { display: none; }
+.doc-footer {
+  margin-top: var(--s8);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  color: var(--ink-3);
+}
+.doc-footer p { margin-bottom: var(--s2); }
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+.table-wrap { overflow-x: auto; margin-block: 0 var(--s5); }
+.table-wrap > table { margin-bottom: 0; }
+@media (min-width: 40rem) { .table-wrap:has(> .table-sticky) { overflow-x: visible; } }
+.nowrap { white-space: nowrap; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-block: 0 var(--s5);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+caption {
+  caption-side: top;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  padding-bottom: var(--s2);
+}
+caption .muted { font-weight: 400; }
+@media (max-width: 40rem) { caption { max-width: calc(100vw - 2 * var(--gutter)); } }
+th, td {
+  padding: var(--s2) var(--s3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+th { font-weight: 600; color: var(--ink-2); border-bottom-color: var(--line-2); }
+thead th { vertical-align: bottom; }
+th:first-child, td:first-child { padding-left: 0; }
+th:last-child, td:last-child { padding-right: 0; }
+th.num, td.num { text-align: right; }
+td.num { color: var(--ink); }
+tr.total th, tr.total td { font-weight: 600; border-top: 1px solid var(--line-2); border-bottom: 0; }
+tr.highlight td { background: var(--accent-soft); }
+tr.dim td { color: var(--ink-3); }
+td.empty { text-align: center; color: var(--ink-3); padding-block: var(--s5); }
+html:not(.js) tr.empty { display: none; }
+.table-compact th, .table-compact td { padding: var(--s1) var(--s2); }
+.table-sticky thead th { position: sticky; top: 0; background: var(--bg); z-index: 1; }
+.table-note { font-family: var(--font-ui); font-size: var(--xs); color: var(--ink-3); margin-top: calc(-1 * var(--s4)); }
+.table-wrap.wide + .table-note { max-width: none; } /* line up under a wide table */
+.delta-good { color: var(--ok); }
+.delta-bad { color: var(--bad); }
+th.sort { cursor: pointer; }
+th.sort:hover { color: var(--ink); }
+th[aria-sort="ascending"]::after { content: " \2191"; color: var(--ink-3); }
+th[aria-sort="descending"]::after { content: " \2193"; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   Key figures
+   -------------------------------------------------------------------------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--s4) var(--s5);
+  margin-block: var(--s5);
+  font-family: var(--font-ui);
+}
+.stat { border-top: 1px solid var(--line-2); padding-top: var(--s3); }
+.stat-value {
+  display: block;
+  font-size: var(--stat);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat-value small { font-size: 0.55em; font-weight: 400; color: var(--ink-3); margin-left: 0.15em; }
+.stat-label { display: block; font-size: var(--small); color: var(--ink-3); margin-top: var(--s1); }
+.stat-note { display: block; font-size: var(--xs); margin-top: var(--s1); font-variant-numeric: tabular-nums; }
+
+/* --------------------------------------------------------------------------
+   Callouts
+   -------------------------------------------------------------------------- */
+.note {
+  border-left: 3px solid var(--line-2);
+  background: var(--surface);
+  padding: var(--s3) var(--s4);
+  margin-block: var(--s5);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.note > :last-child { margin-bottom: 0; }
+.note-title {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--small);
+  margin-block: 0 var(--s1);
+}
+.note-info { border-left-color: var(--accent); }
+.note-warn { border-left-color: var(--warn); }
+.note-decision { border-left-color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   Badges
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: var(--xs);
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.3em 0.55em;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-2);
+  color: var(--ink-2);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.badge-ok, .badge-warn, .badge-bad, .badge-accent { border-color: color-mix(in srgb, currentColor 40%, transparent); }
+.badge-ok { color: var(--ok); background: var(--ok-soft); }
+.badge-warn { color: var(--warn); background: var(--warn-soft); }
+.badge-bad { color: var(--bad); background: var(--bad-soft); }
+.badge-accent { color: var(--accent); background: var(--accent-soft); }
+
+/* --------------------------------------------------------------------------
+   Code
+   -------------------------------------------------------------------------- */
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.875em; }
+:not(pre) > code, kbd {
+  background: var(--surface);
+  padding: 0.1em 0.3em;
+  border-radius: var(--radius);
+}
+kbd { border: 1px solid var(--line-2); font-size: 0.8em; }
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s3) var(--s4);
+  overflow-x: auto;
+  margin-block: 0 var(--s5);
+  tab-size: 2;
+}
+pre code { font-size: inherit; background: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   Figures, images, charts
+   -------------------------------------------------------------------------- */
+figure { margin-block: var(--s5); margin-inline: 0; }
+figure img, figure svg { display: block; }
+figure img.framed { border: 1px solid var(--line); }
+figcaption {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  line-height: 1.4;
+  color: var(--ink-3);
+  margin-top: var(--s2);
+}
+figcaption b { color: var(--ink); font-weight: 600; }
+.figure-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); align-items: start; }
+.figure-pair figure { margin-block: 0; }
+@media (max-width: 40rem) { .figure-pair { grid-template-columns: 1fr; } }
+
+.chart { font-family: var(--font-ui); font-size: var(--xs); font-variant-numeric: tabular-nums; overflow-x: auto; }
+.chart svg { width: 100%; min-width: 28rem; height: auto; display: block; overflow: visible; }
+.chart.wide svg { min-width: 43rem; }
+.chart text { fill: var(--ink-3); font-family: inherit; }
+.chart .strong { fill: var(--ink); font-weight: 500; }
+.chart .grid { stroke: var(--chart-grid); stroke-width: 1; }
+.chart .axis { stroke: var(--line-2); stroke-width: 1; }
+.chart .s1 { fill: var(--chart-1); }
+.chart .s2 { fill: var(--chart-2); }
+.chart .s3 { fill: var(--chart-3); }
+.chart .l1, .chart .l2, .chart .l3 { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .l1 { stroke: var(--chart-1); }
+.chart .l2 { stroke: var(--chart-2); }
+.chart .l3 { stroke: var(--chart-3); }
+.chart .area1 { fill: var(--chart-1); opacity: 0.12; }
+.chart .marker { stroke: var(--bad); stroke-dasharray: 3 3; }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  font-family: var(--font-ui);
+  font-size: var(--xs);
+  color: var(--ink-2);
+  margin-bottom: var(--s2);
+}
+.swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+  margin-right: 0.4em;
+  vertical-align: -0.02em;
+  background: var(--chart-1);
+}
+.swatch.s2 { background: var(--chart-2); }
+.swatch.s3 { background: var(--chart-3); }
+.sparkline { width: 5.5rem; height: 1.1em; vertical-align: middle; display: inline-block; }
+.sparkline path { stroke: var(--chart-1); fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+
+/* --------------------------------------------------------------------------
+   Key-value metadata, disclosure, tabs, steps, timeline, sources
+   -------------------------------------------------------------------------- */
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s2) var(--s5);
+  margin-block: 0 var(--s5);
+}
+.kv dt { font-family: var(--font-ui); font-size: var(--small); color: var(--ink-3); padding-top: 0.2em; }
+.kv dd { margin: 0; }
+@media (max-width: 30rem) {
+  .kv { grid-template-columns: 1fr; gap: 0; }
+  .kv dt { padding-top: 0; }
+  .kv dd { margin-bottom: var(--s3); }
+}
+
+details { border-top: 1px solid var(--line); padding: var(--s3) 0; }
+details:not(:has(+ details)) { border-bottom: 1px solid var(--line); margin-bottom: var(--s5); }
+details > :last-child { margin-bottom: 0; }
+summary {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--small);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  gap: var(--s2);
+  align-items: baseline;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "\25B8"; color: var(--ink-3); font-size: 0.9em; transition: transform 0.15s; }
+details[open] > summary::before { transform: rotate(90deg); }
+details[open] > summary { margin-bottom: var(--s3); }
+
+.tabs { margin-block: 0 var(--s5); }
+.tablist {
+  display: flex;
+  gap: var(--s5);
+  border-bottom: 1px solid var(--line-2);
+  margin-block: 0 var(--s4);
+  overflow-x: auto;
+}
+.tab {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-weight: 500;
+  color: var(--ink-3);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: var(--s2) 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabpanel[hidden] { display: none; }
+.js .tabpanel > .tab-heading { display: none; }
+
+.steps, .timeline { list-style: none; padding: 0; margin-block: 0 var(--s5); }
+.steps { counter-reset: step; }
+.steps > li, .timeline > li {
+  display: grid;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.steps > li:last-child, .timeline > li:last-child { border-bottom: 1px solid var(--line); }
+.steps > li { grid-template-columns: 1.75rem 1fr; }
+.steps > li::before {
+  counter-increment: step;
+  content: counter(step);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  padding-top: 0.2em;
+}
+.timeline > li { grid-template-columns: minmax(7rem, max-content) 1fr; }
+.timeline .when {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  padding-top: 0.2em;
+  white-space: nowrap;
+}
+.steps > li > :last-child, .timeline > li > :last-child { margin-bottom: 0; }
+@media (max-width: 40rem) {
+  .timeline > li { grid-template-columns: 1fr; gap: var(--s1); }
+}
+
+.sources { font-size: var(--small); color: var(--ink-2); padding-left: 1.5rem; }
+.sources li { margin-bottom: var(--s2); }
+sup.fn { font-family: var(--font-ui); font-size: 0.7em; line-height: 0; }
+sup.fn a { text-decoration: none; }
+
+/* --------------------------------------------------------------------------
+   Controls (in-page only: forms cannot submit anywhere)
+   -------------------------------------------------------------------------- */
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s4);
+  align-items: flex-end;
+  margin-block: 0 var(--s5);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+}
+.field { display: flex; flex-direction: column; gap: var(--s1); font-family: var(--font-ui); font-size: var(--small); }
+.field.grow { flex: 1 1 12rem; }
+label { font-family: var(--font-ui); font-size: var(--small); font-weight: 500; color: var(--ink-2); }
+.check { display: flex; gap: var(--s2); align-items: center; font-weight: 400; color: var(--ink); cursor: pointer; }
+input[type="text"], input[type="number"], input[type="search"], input[type="date"], select, textarea {
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.6rem;
+  min-height: 2.125rem;
+  max-width: 100%;
+}
+input[type="number"] { font-variant-numeric: tabular-nums; width: 8rem; }
+input::placeholder { color: var(--ink-3); }
+input:hover, select:hover, textarea:hover { border-color: var(--ink-3); }
+select {
+  appearance: none;
+  padding-right: 1.9rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%236b6d76' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 1rem; height: 1rem; margin: 0; }
+input[type="checkbox"].switch {
+  appearance: none;
+  width: 2.125rem;
+  height: 1.25rem;
+  border-radius: 1rem;
+  background: var(--control-border);
+  position: relative;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+input[type="checkbox"].switch::before {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: calc(1.25rem - 4px);
+  height: calc(1.25rem - 4px);
+  border-radius: 50%;
+  background: var(--bg);
+  transition: transform 0.15s;
+}
+input[type="checkbox"].switch:checked { background: var(--accent); }
+input[type="checkbox"].switch:checked::before { transform: translateX(0.875rem); }
+.btn {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.9rem;
+  min-height: 2.125rem;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn-primary { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+output { font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
+.js-only { display: none; }
+.js .js-only { display: revert; }
+
+/* --------------------------------------------------------------------------
+   Layout: prose is held to the measure; add .wide to let an element span the
+   full column (tables, figures, stat rows, code). Keep this rule last.
+   -------------------------------------------------------------------------- */
+:where(header, main, footer, section, article, .tabs, .tabpanel) > :not(.wide, section, article, .tabs, .tabpanel, script, style) {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+.wide { max-width: none; margin-inline: auto; }
+figure.figure-inline { max-width: 20rem; }
+
+/* --------------------------------------------------------------------------
+   Print
+   -------------------------------------------------------------------------- */
+@media print {
+  :root {
+    --bg: #fff; --surface: #f4f4f4; --ink: #000; --ink-2: #333; --ink-3: #555;
+    --line: #ccc; --line-2: #999; --accent: #000; --accent-soft: #eee;
+    --text: 10.5pt; --small: 9pt; --xs: 8pt; --h1: 20pt; --h2: 14pt; --summary: 12pt; --stat: 16pt;
+  }
+  html { color-scheme: light; }
+  body { max-width: none; padding: 0; }
+  .doc-header { padding-top: 0; }
+  a { color: inherit; }
+  main a[href^="http"]:not(.link-more)::after { content: " (" attr(href) ")"; font-size: 0.85em; color: #555; word-break: break-all; }
+  .table-wrap { overflow: visible; }
+  .table-sticky thead th { position: static; }
+  thead { display: table-header-group; }
+  tr, figure, .note, .stat, pre, .steps > li, .timeline > li { break-inside: avoid; }
+  h2, h3, h4, caption { break-after: avoid; }
+  .tablist, .form-inline, .btn, input, select, .js-only { display: none !important; }
+  .tabpanel[hidden] { display: block; }
+  .js .tabpanel > .tab-heading { display: block; }
+}
+</style>
+</head>
+<body>
+
+<header class="doc-header">
+  <h1>Ingest API outage on 12 September</h1>
+  <p class="summary">A deploy tripled the worker count per pod, the Postgres connection pool ran out, and the API returned 502s for 41 minutes. Nothing was lost: 18,400 requests failed, and all but 1,300 were retried by their clients.</p>
+  <p class="meta">
+    <time datetime="2026-09-14">14 September 2026</time>
+    <span>Laurent Gonzalez</span>
+    <span class="badge badge-ok">Resolved</span>
+  </p>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-value">41<small>min</small></span>
+      <span class="stat-label">Duration</span>
+      <span class="stat-note muted">14:07 to 14:48 UTC</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">18,400</span>
+      <span class="stat-label">Requests failed</span>
+      <span class="stat-note muted">0.6% of the day</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">63%</span>
+      <span class="stat-label">Peak error rate</span>
+      <span class="stat-note delta-bad">from 0.3% baseline</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">14<small>min</small></span>
+      <span class="stat-label">Time to first alert</span>
+    </div>
+  </div>
+
+  <h2>What happened</h2>
+  <p>At 14:00 UTC on Friday 12 September we deployed ingest-api 2026.09.1. The release was about retry handling. It also carried, in the same PR, a change to <code>WORKERS</code> from 8 to 24 per pod that had been sitting in a branch since August. Nobody flagged it in review because the diff was two characters in a Helm values file and the PR description did not mention it.</p>
+  <p>Seven minutes later the connection pool on the primary was full. Every new request from ingest-api waited five seconds for a connection, gave up, and returned a 502. The 5xx rate went from a baseline of 0.3% to 63% and stayed there until the rollback finished at 14:48.</p>
+  <p>The alert took 14 minutes to fire. The 5xx alert averages over a 10-minute window, which is fine for a slow degradation and useless for a cliff. That part bothers me more than the outage itself. We were blind for a quarter of an hour on a Friday afternoon while the graph was vertical.</p>
+
+  <ol class="timeline">
+    <li><span class="when">14:00 UTC</span><p>Deploy of ingest-api 2026.09.1 starts. Workers per pod go from 8 to 24.</p></li>
+    <li><span class="when">14:07</span><p>First <code>pool exhausted</code> errors in the logs. 5xx rate passes 30% within a minute.</p></li>
+    <li><span class="when">14:21</span><p>Alert pages on-call (Tom). The 10-minute averaging window explains the delay.</p></li>
+    <li><span class="when">14:33</span><p>Rollback started, after a short detour through "is it the database?". It was, but not in the way we thought.</p></li>
+    <li><span class="when">14:48</span><p>Error rate back to baseline. Incident closed at 15:10 after the dead-letter queue was checked.</p></li>
+  </ol>
+
+  <h2>Why it happened</h2>
+  <p>Each ingest-api worker holds one connection for the life of a request (<code>DB_POOL_MAX=1</code>). With 3 pods and 24 workers each, ingest-api alone can hold 72 connections. Add sync-worker, reporting and admin, and the total lands exactly on the <code>max_connections</code> of 100 that the primary has had since we set it up in 2024. We had never been close to the limit, so nobody treated it as a budget. It is one.</p>
+
+  <div class="table-wrap wide">
+    <table>
+      <caption>Connection use by service, 12 September 2026, 14:00 to 15:00 UTC <span class="muted">(peak of one-minute samples)</span></caption>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Pool</th>
+          <th class="num">Pods</th>
+          <th class="num">Workers per pod</th>
+          <th class="num">Peak connections</th>
+          <th class="num">Share of limit (%)</th>
+          <th class="num">Change from previous deploy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight">
+          <td>ingest-api</td>
+          <td>primary</td>
+          <td class="num">3</td>
+          <td class="num">24</td>
+          <td class="num">72</td>
+          <td class="num">72.0</td>
+          <td class="num delta-bad">+48</td>
+        </tr>
+        <tr>
+          <td>sync-worker</td>
+          <td>primary</td>
+          <td class="num">2</td>
+          <td class="num">8</td>
+          <td class="num">16</td>
+          <td class="num">16.0</td>
+          <td class="num">0</td>
+        </tr>
+        <tr>
+          <td>reporting</td>
+          <td>primary</td>
+          <td class="num">1</td>
+          <td class="num">8</td>
+          <td class="num">8</td>
+          <td class="num">8.0</td>
+          <td class="num">0</td>
+        </tr>
+        <tr>
+          <td>admin</td>
+          <td>primary</td>
+          <td class="num">1</td>
+          <td class="num">4</td>
+          <td class="num">4</td>
+          <td class="num">4.0</td>
+          <td class="num">0</td>
+        </tr>
+        <tr class="total">
+          <th scope="row">Total</th>
+          <td></td>
+          <td class="num">7</td>
+          <td class="num"></td>
+          <td class="num">100</td>
+          <td class="num">100.0</td>
+          <td class="num">+48</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">Reads go to the replica through a separate pool and are not counted here.</p>
+
+  <div class="note note-info">
+    <p class="note-title">Why the limit is 100</p>
+    <p>Because 100 is the Postgres default and we never had a reason to change it. Each connection is a backend process with roughly 10 MB of memory, so on this instance 100 is also close to what it can comfortably run. Raising it is not free.</p>
+  </div>
+
+  <figure class="chart wide" id="fig-errors">
+    <div class="legend"><span><i class="swatch"></i>5xx rate</span><span><i class="swatch s2"></i>Connections in use, as a share of the 100 limit</span></div>
+    <svg viewBox="0 0 920 220" role="img" aria-labelledby="fig-errors-t fig-errors-d">
+      <title id="fig-errors-t">5xx rate and connection use for ingest-api, 13:30 to 15:30 UTC</title>
+      <desc id="fig-errors-d">5xx rate: 0% at 13:30, peak 63% at point 8, 0% at 15:30. Connections in use, as a share of the 100 limit: 30% at 13:30, peak 100% at point 7, 30% at 15:30. Marker at 14:00.</desc>
+      <line class="axis" x1="47" x2="897" y1="192" y2="192"/>
+      <text x="41" y="196" text-anchor="end">0%</text>
+      <line class="grid" x1="47" x2="897" y1="147" y2="147"/>
+      <text x="41" y="151" text-anchor="end">25%</text>
+      <line class="grid" x1="47" x2="897" y1="102" y2="102"/>
+      <text x="41" y="106" text-anchor="end">50%</text>
+      <line class="grid" x1="47" x2="897" y1="57" y2="57"/>
+      <text x="41" y="61" text-anchor="end">75%</text>
+      <line class="grid" x1="47" x2="897" y1="12" y2="12"/>
+      <text x="41" y="16" text-anchor="end">100%</text>
+      <text x="47" y="212" text-anchor="middle">13:30</text>
+      <text x="273.7" y="212" text-anchor="middle">14:00</text>
+      <text x="500.3" y="212" text-anchor="middle">14:30</text>
+      <text x="727" y="212" text-anchor="middle">15:00</text>
+      <text x="897" y="212" text-anchor="middle">15:30</text>
+      <line class="marker" x1="273.7" x2="273.7" y1="12" y2="192"/>
+      <path class="area1" d="M47 192 L103.7 192 L160.3 192 L217 190.2 L273.7 188.4 L330.3 123.6 L387 82.2 L443.7 78.6 L500.3 84 L557 85.8 L613.7 156 L670.3 188.4 L727 192 L783.7 192 L840.3 192 L897 192 L897 192 L47 192 Z"/>
+      <path class="l1" d="M47 192 L103.7 192 L160.3 192 L217 190.2 L273.7 188.4 L330.3 123.6 L387 82.2 L443.7 78.6 L500.3 84 L557 85.8 L613.7 156 L670.3 188.4 L727 192 L783.7 192 L840.3 192 L897 192"/>
+      <path class="l2" d="M47 138 L103.7 136.2 L160.3 138 L217 134.4 L273.7 120 L330.3 19.2 L387 12 L443.7 12 L500.3 12 L557 12 L613.7 12 L670.3 66 L727 130.8 L783.7 136.2 L840.3 138 L897 138"/>
+    </svg>
+    <figcaption><b>Figure 1.</b> Error rate and connection use for ingest-api, 12 September 2026, 13:30 to 15:30 UTC. The dashed line marks the start of the deploy at 14:00. Errors begin the moment connections reach the limit.</figcaption>
+  </figure>
+
+  <div class="note note-warn">
+    <p class="note-title">The alert fired late</p>
+    <p>The 5xx alert has a 10-minute averaging window, so the page went out 14 minutes after the first failed request. This is fixed in the follow-ups below but was true during the incident, and it will be true again for any other alert that uses the same template.</p>
+  </div>
+
+  <h2>Impact</h2>
+  <p>18,400 requests failed between 14:07 and 14:48, all on <code>POST /transactions</code> and <code>POST /sync</code>. Reads were unaffected because they go to the replica.</p>
+  <p>Most clients retry with backoff, so 17,100 of those requests were accepted within the hour. The other 1,300 came from the nightly reconciliation job, which does not retry. We replayed them by hand from the dead-letter queue on Monday morning. The idempotency key did its job: no duplicate rows, checked with the query in the appendix.</p>
+
+  <div class="table-wrap">
+    <table class="table-compact">
+      <caption>Failed requests by endpoint and what happened to them</caption>
+      <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th class="num">Failed</th>
+          <th class="num">Retried by client</th>
+          <th class="num">Replayed by hand</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>POST /transactions</code></td><td class="num">15,900</td><td class="num">15,200</td><td class="num">700</td></tr>
+        <tr><td><code>POST /sync</code></td><td class="num">2,500</td><td class="num">1,900</td><td class="num">600</td></tr>
+        <tr class="total"><th scope="row">Total</th><td class="num">18,400</td><td class="num">17,100</td><td class="num">1,300</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>What we are changing</h2>
+  <div class="note note-decision">
+    <p class="note-title">Decision</p>
+    <p>Put PgBouncer in transaction mode in front of the primary and cap ingest-api at 8 workers per pod. Agreed with Anna and Tom on 13 September.</p>
+  </div>
+
+  <ol class="steps">
+    <li><p>Deploy PgBouncer next to the primary in transaction mode with <code>default_pool_size = 20</code>. Laurent, by 19 September.</p></li>
+    <li><p>Set <code>WORKERS</code> back to 8, point ingest-api at the bouncer port, and shorten the 5xx alert window to 2 minutes. Tom, by 19 September.</p></li>
+    <li><p>Add a check to CI that sums workers times pods across services and fails when the total passes 80% of <code>max_connections</code>. Anna, by 26 September.</p></li>
+  </ol>
+
+  <p>We are not raising <code>max_connections</code>. It would have bought time on Friday and it would have hidden the actual mistake, which is that nobody knew the budget existed.</p>
+
+  <h2>Open questions</h2>
+  <ul>
+    <li>Should sync-worker also go through the bouncer? It holds long transactions, which is the one thing transaction pooling handles badly.</li>
+    <li>The retry-handling change that motivated the release is still not deployed. It needs its own PR, alone this time.</li>
+  </ul>
+
+  <details>
+    <summary>Query used to check for duplicate rows (8 lines)</summary>
+    <pre><code>SELECT idempotency_key, count(*)
+FROM transactions
+WHERE created_at BETWEEN '2026-09-12 14:00+00' AND '2026-09-12 16:00+00'
+GROUP BY idempotency_key
+HAVING count(*) > 1;
+-- 0 rows</code></pre>
+  </details>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Grafana, dashboard "ingest-api / overview", panels "5xx rate" and "pg connections", 12 September 2026, 13:30 to 15:30 UTC.</li>
+    <li>PR 4821 (release 2026.09.1) and PR 4830 (rollback), and the deploy log for both.</li>
+    <li>PostgreSQL documentation, "Connections and Authentication", <a href="https://www.postgresql.org/docs/current/runtime-config-connection.html">postgresql.org</a>.</li>
+    <li>PgBouncer documentation, pool modes, <a href="https://www.pgbouncer.org/config.html">pgbouncer.org</a>.</li>
+  </ol>
+</main>
+
+<footer class="doc-footer">
+  <p>Written by Laurent Gonzalez, 14 September 2026. Numbers come from Grafana and the incident channel; the dashboard retention is 30 days.</p>
+</footer>
+
+<script>
+/* Optional enhancements: tabs, table filter, sortable tables. The page reads
+   fully without them. Never touch web storage, cookies or client-side
+   databases here: the page runs in a sandboxed origin and they throw. */
+(function () {
+  'use strict';
+  try {
+    document.documentElement.classList.add('js');
+
+    /* Safety net: wrap any bare table so it scrolls sideways on narrow screens instead of widening the page. */
+    document.querySelectorAll('table').forEach(function (t) {
+      if (t.parentElement.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap' + (t.classList.contains('wide') ? ' wide' : '');
+      t.classList.remove('wide');
+      t.parentNode.insertBefore(w, t);
+      w.appendChild(t);
+    });
+
+    /* Tabs: <div class="tabs"> containing <section class="tabpanel"> each with an h3 (or data-label). */
+    document.querySelectorAll('.tabs').forEach(function (tabs, g) {
+      var panels = Array.prototype.slice.call(tabs.children).filter(function (el) { return el.classList.contains('tabpanel'); });
+      if (panels.length < 2) return;
+      var list = document.createElement('div');
+      list.className = 'tablist';
+      list.setAttribute('role', 'tablist');
+      var buttons = panels.map(function (panel, i) {
+        var heading = panel.querySelector('h2, h3, h4');
+        var label = panel.getAttribute('data-label') || (heading ? heading.textContent : 'Tab ' + (i + 1));
+        var id = panel.id || (tabs.id || 'tabs' + (g + 1)) + '-' + (i + 1);
+        panel.id = id;
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('tabindex', '0');
+        if (heading && heading === panel.firstElementChild) heading.classList.add('tab-heading');
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tab';
+        b.id = id + '-tab';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-controls', id);
+        b.textContent = label;
+        panel.setAttribute('aria-labelledby', b.id);
+        b.addEventListener('click', function () { select(i); });
+        b.addEventListener('keydown', function (e) {
+          var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!d) return;
+          e.preventDefault();
+          var n = (i + d + panels.length) % panels.length;
+          select(n);
+          buttons[n].focus();
+        });
+        list.appendChild(b);
+        return b;
+      });
+      function select(n) {
+        panels.forEach(function (p, j) { p.hidden = j !== n; });
+        buttons.forEach(function (b, j) {
+          b.setAttribute('aria-selected', j === n ? 'true' : 'false');
+          b.tabIndex = j === n ? 0 : -1;
+        });
+      }
+      tabs.insertBefore(list, panels[0]);
+      select(0);
+    });
+
+    /* Table filter: <input type="search" data-filter="#table-id">. A <tr class="empty"> row, if present, shows when nothing matches. */
+    document.querySelectorAll('input[data-filter]').forEach(function (input) {
+      var table = document.querySelector(input.getAttribute('data-filter'));
+      if (!table) return;
+      var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+      var empty = table.querySelector('tr.empty');
+      if (empty) empty.hidden = true;
+      input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        rows.forEach(function (r) {
+          if (r === empty) return;
+          var hit = !q || r.textContent.toLowerCase().indexOf(q) !== -1;
+          r.hidden = !hit;
+          if (hit) shown++;
+        });
+        if (empty) empty.hidden = shown > 0;
+      });
+    });
+
+    /* Sortable tables: <table class="sortable">. Click a header to sort; columns with th.num sort numerically. tr.total stays last. */
+    document.querySelectorAll('table.sortable').forEach(function (table) {
+      var tbody = table.tBodies[0];
+      if (!tbody) return;
+      var heads = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+      heads.forEach(function (th, col) {
+        th.tabIndex = 0;
+        th.classList.add('sort');
+        th.setAttribute('aria-sort', 'none');
+        function num(s) { return parseFloat(s.replace(/−/g, '-').replace(/[^0-9.\-]/g, '')) || 0; }
+        function sort() {
+          var dir = th.getAttribute('aria-sort') === 'ascending' ? -1 : 1;
+          var numeric = th.classList.contains('num');
+          var rows = Array.prototype.slice.call(tbody.rows).filter(function (r) { return !r.classList.contains('total') && !r.classList.contains('empty'); });
+          rows.sort(function (a, b) {
+            var x = a.cells[col] ? a.cells[col].textContent.trim() : '';
+            var y = b.cells[col] ? b.cells[col].textContent.trim() : '';
+            if (numeric) return (num(x) - num(y)) * dir;
+            return x.localeCompare(y, undefined, { numeric: true }) * dir;
+          });
+          rows.forEach(function (r) { tbody.appendChild(r); });
+          Array.prototype.forEach.call(tbody.querySelectorAll('tr.total, tr.empty'), function (r) { tbody.appendChild(r); });
+          heads.forEach(function (o) { o.setAttribute('aria-sort', 'none'); });
+          th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
+        }
+        th.addEventListener('click', sort);
+        th.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sort(); } });
+      });
+    });
+  } catch (e) { /* enhancements are optional */ }
+})();
+</script>
+</body>
+</html>

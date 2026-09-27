@@ -1,0 +1,1685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>Quire components</title>
+<style>
+/* ==========================================================================
+   Quire, the manifest design language. Tokens first, then components.
+   Do not add colors, sizes or fonts outside these tokens. See design/DESIGN.md.
+   ========================================================================== */
+:root {
+  color-scheme: light dark;
+
+  /* Neutrals */
+  --bg: #ffffff;
+  --surface: #f5f5f3;
+  --ink: #1b1c20;
+  --ink-2: #4b4d55;
+  --ink-3: #6b6d76;
+  --line: #e3e3df;
+  --line-2: #c9c9c4;
+  --control-border: #8a8c93; /* form controls: 3:1 against --bg (WCAG 1.4.11) */
+
+  /* Accent: links, focus, primary button, first chart series */
+  --accent: #0b6c78;
+  --accent-ink: #085660;
+  --accent-soft: #e6f2f3;
+
+  /* Semantic, used only where a state means something */
+  --ok: #2f6f3e;   --ok-soft: #e8f2ea;
+  --warn: #8f5a00; --warn-soft: #f9f0dc;
+  --bad: #a83a32;  --bad-soft: #f8e7e5;
+
+  /* Charts: at most three series */
+  --chart-1: var(--accent);
+  --chart-2: #8d8f97;
+  --chart-3: #a87414;
+  --chart-grid: var(--line);
+
+  /* Type */
+  --font-text: Charter, "Iowan Old Style", "Source Serif 4", "Source Serif Pro", Georgia, "Noto Serif", serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --text: 1.0625rem;   /* 17px body */
+  --text-lh: 1.55;
+  --small: 0.875rem;   /* 14px: tables, captions, meta, controls */
+  --xs: 0.8125rem;     /* 13px: badges, chart labels */
+  --h1: 2rem;
+  --h2: 1.375rem;
+  --h3: 1.0625rem;
+  --summary: 1.25rem;
+  --stat: 1.75rem;
+
+  /* Space (4px base) */
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem;
+  --s5: 1.5rem;  --s6: 2rem;   --s7: 3rem;    --s8: 4rem;
+
+  /* Layout */
+  --measure: 38rem;   /* prose column, about 75 characters */
+  --wide: 58rem;      /* tables, figures, stat rows with .wide */
+  --gutter: 1.25rem;
+  --radius: 4px;
+  --focus: 2px solid var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181c;
+    --surface: #1f2126;
+    --ink: #e7e7e4;
+    --ink-2: #b4b5ba;
+    --ink-3: #8b8d94;
+    --line: #2c2e35;
+    --line-2: #44464e;
+    --control-border: #6e7078;
+    --accent: #6fc6d1;
+    --accent-ink: #9ad9e1;
+    --accent-soft: #1a2f33;
+    --ok: #7fc48f;   --ok-soft: #1c2a1f;
+    --warn: #e0b05a; --warn-soft: #2e2717;
+    --bad: #ef8a82;  --bad-soft: #33201f;
+    --chart-2: #8d8f97;
+    --chart-3: #d7a24a;
+  }
+}
+@media (max-width: 40rem) {
+  :root {
+    --text: 1rem;
+    --h1: 1.625rem;
+    --h2: 1.25rem;
+    --summary: 1.125rem;
+    --stat: 1.5rem;
+    --gutter: 1rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0 auto;
+  max-width: calc(var(--wide) + 2 * var(--gutter));
+  padding: 0 var(--gutter) var(--s7);
+  font-family: var(--font-text);
+  font-size: var(--text);
+  line-height: var(--text-lh);
+  color: var(--ink);
+  background: var(--bg);
+}
+:focus-visible { outline: var(--focus); outline-offset: 2px; }
+::selection { background: var(--accent-soft); }
+img, svg, video { max-width: 100%; height: auto; }
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { transition: none !important; animation: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Headings and text
+   -------------------------------------------------------------------------- */
+h1, h2, h3, h4 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-block: 0;
+  text-wrap: balance;
+}
+h1 { font-size: var(--h1); letter-spacing: -0.02em; margin-bottom: var(--s3); }
+h2 { font-size: var(--h2); margin-top: var(--s7); margin-bottom: var(--s3); }
+h3 { font-size: var(--h3); margin-top: var(--s6); margin-bottom: var(--s2); }
+h4 { font-size: var(--small); margin-top: var(--s5); margin-bottom: var(--s2); color: var(--ink-2); }
+h2 + h3 { margin-top: var(--s4); }
+p { margin-block: 0 var(--s4); text-wrap: pretty; }
+ul, ol { margin-block: 0 var(--s4); padding-left: 1.4rem; }
+li { margin-bottom: var(--s1); }
+li > ul, li > ol { margin-top: var(--s1); margin-bottom: 0; }
+strong, b { font-weight: 700; }
+small { font-size: var(--small); }
+blockquote {
+  margin-block: 0 var(--s4);
+  padding-left: var(--s4);
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+}
+blockquote > :last-child { margin-bottom: 0; }
+hr { border: 0; border-top: 1px solid var(--line); margin-block: var(--s6); }
+abbr[title] { text-decoration: underline dotted; text-underline-offset: 0.15em; }
+.muted { color: var(--ink-3); }
+.ui { font-family: var(--font-ui); }
+.num, .tabular { font-variant-numeric: tabular-nums; }
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+a:hover { color: var(--accent-ink); text-decoration-color: currentColor; }
+.link-more {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--small);
+  text-decoration: none;
+}
+.link-more::after { content: " \2192"; }
+.link-more:hover { text-decoration: underline; }
+.ext::after { content: "\202F\2197"; font-family: var(--font-ui); font-size: 0.8em; }
+
+/* --------------------------------------------------------------------------
+   Document header and footer
+   -------------------------------------------------------------------------- */
+.doc-header {
+  padding-top: var(--s7);
+  padding-bottom: var(--s5);
+  margin-bottom: var(--s6);
+  border-bottom: 1px solid var(--line-2);
+}
+.summary {
+  font-size: var(--summary);
+  line-height: 1.4;
+  color: var(--ink-2);
+  margin-block: 0 var(--s4);
+}
+.meta {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+  margin-block: 0;
+}
+.meta > * + *::before {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 0.9em;
+  background: var(--line-2);
+  margin-right: var(--s4);
+  vertical-align: -0.1em;
+}
+.meta > .badge::before { display: none; }
+.doc-footer {
+  margin-top: var(--s8);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  color: var(--ink-3);
+}
+.doc-footer p { margin-bottom: var(--s2); }
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+.table-wrap { overflow-x: auto; margin-block: 0 var(--s5); }
+.table-wrap > table { margin-bottom: 0; }
+@media (min-width: 40rem) { .table-wrap:has(> .table-sticky) { overflow-x: visible; } }
+.nowrap { white-space: nowrap; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-block: 0 var(--s5);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+caption {
+  caption-side: top;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  padding-bottom: var(--s2);
+}
+caption .muted { font-weight: 400; }
+@media (max-width: 40rem) { caption { max-width: calc(100vw - 2 * var(--gutter)); } }
+th, td {
+  padding: var(--s2) var(--s3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+th { font-weight: 600; color: var(--ink-2); border-bottom-color: var(--line-2); }
+thead th { vertical-align: bottom; }
+th:first-child, td:first-child { padding-left: 0; }
+th:last-child, td:last-child { padding-right: 0; }
+th.num, td.num { text-align: right; }
+td.num { color: var(--ink); }
+tr.total th, tr.total td { font-weight: 600; border-top: 1px solid var(--line-2); border-bottom: 0; }
+tr.highlight td { background: var(--accent-soft); }
+tr.dim td { color: var(--ink-3); }
+td.empty { text-align: center; color: var(--ink-3); padding-block: var(--s5); }
+html:not(.js) tr.empty { display: none; }
+.table-compact th, .table-compact td { padding: var(--s1) var(--s2); }
+.table-sticky thead th { position: sticky; top: 0; background: var(--bg); z-index: 1; }
+.table-note { font-family: var(--font-ui); font-size: var(--xs); color: var(--ink-3); margin-top: calc(-1 * var(--s4)); }
+.table-wrap.wide + .table-note { max-width: none; } /* line up under a wide table */
+.delta-good { color: var(--ok); }
+.delta-bad { color: var(--bad); }
+th.sort { cursor: pointer; }
+th.sort:hover { color: var(--ink); }
+th[aria-sort="ascending"]::after { content: " \2191"; color: var(--ink-3); }
+th[aria-sort="descending"]::after { content: " \2193"; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   Key figures
+   -------------------------------------------------------------------------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--s4) var(--s5);
+  margin-block: var(--s5);
+  font-family: var(--font-ui);
+}
+.stat { border-top: 1px solid var(--line-2); padding-top: var(--s3); }
+.stat-value {
+  display: block;
+  font-size: var(--stat);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat-value small { font-size: 0.55em; font-weight: 400; color: var(--ink-3); margin-left: 0.15em; }
+.stat-label { display: block; font-size: var(--small); color: var(--ink-3); margin-top: var(--s1); }
+.stat-note { display: block; font-size: var(--xs); margin-top: var(--s1); font-variant-numeric: tabular-nums; }
+
+/* --------------------------------------------------------------------------
+   Callouts
+   -------------------------------------------------------------------------- */
+.note {
+  border-left: 3px solid var(--line-2);
+  background: var(--surface);
+  padding: var(--s3) var(--s4);
+  margin-block: var(--s5);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.note > :last-child { margin-bottom: 0; }
+.note-title {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--small);
+  margin-block: 0 var(--s1);
+}
+.note-info { border-left-color: var(--accent); }
+.note-warn { border-left-color: var(--warn); }
+.note-decision { border-left-color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   Badges
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: var(--xs);
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.3em 0.55em;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-2);
+  color: var(--ink-2);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.badge-ok, .badge-warn, .badge-bad, .badge-accent { border-color: color-mix(in srgb, currentColor 40%, transparent); }
+.badge-ok { color: var(--ok); background: var(--ok-soft); }
+.badge-warn { color: var(--warn); background: var(--warn-soft); }
+.badge-bad { color: var(--bad); background: var(--bad-soft); }
+.badge-accent { color: var(--accent); background: var(--accent-soft); }
+
+/* --------------------------------------------------------------------------
+   Code
+   -------------------------------------------------------------------------- */
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.875em; }
+:not(pre) > code, kbd {
+  background: var(--surface);
+  padding: 0.1em 0.3em;
+  border-radius: var(--radius);
+}
+kbd { border: 1px solid var(--line-2); font-size: 0.8em; }
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s3) var(--s4);
+  overflow-x: auto;
+  margin-block: 0 var(--s5);
+  tab-size: 2;
+}
+pre code { font-size: inherit; background: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   Figures, images, charts
+   -------------------------------------------------------------------------- */
+figure { margin-block: var(--s5); margin-inline: 0; }
+figure img, figure svg { display: block; }
+figure img.framed { border: 1px solid var(--line); }
+figcaption {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  line-height: 1.4;
+  color: var(--ink-3);
+  margin-top: var(--s2);
+}
+figcaption b { color: var(--ink); font-weight: 600; }
+.figure-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); align-items: start; }
+.figure-pair figure { margin-block: 0; }
+@media (max-width: 40rem) { .figure-pair { grid-template-columns: 1fr; } }
+
+.chart { font-family: var(--font-ui); font-size: var(--xs); font-variant-numeric: tabular-nums; overflow-x: auto; }
+.chart svg { width: 100%; min-width: 28rem; height: auto; display: block; overflow: visible; }
+.chart.wide svg { min-width: 43rem; }
+.chart text { fill: var(--ink-3); font-family: inherit; }
+.chart .strong { fill: var(--ink); font-weight: 500; }
+.chart .grid { stroke: var(--chart-grid); stroke-width: 1; }
+.chart .axis { stroke: var(--line-2); stroke-width: 1; }
+.chart .s1 { fill: var(--chart-1); }
+.chart .s2 { fill: var(--chart-2); }
+.chart .s3 { fill: var(--chart-3); }
+.chart .l1, .chart .l2, .chart .l3 { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .l1 { stroke: var(--chart-1); }
+.chart .l2 { stroke: var(--chart-2); }
+.chart .l3 { stroke: var(--chart-3); }
+.chart .area1 { fill: var(--chart-1); opacity: 0.12; }
+.chart .marker { stroke: var(--bad); stroke-dasharray: 3 3; }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  font-family: var(--font-ui);
+  font-size: var(--xs);
+  color: var(--ink-2);
+  margin-bottom: var(--s2);
+}
+.swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+  margin-right: 0.4em;
+  vertical-align: -0.02em;
+  background: var(--chart-1);
+}
+.swatch.s2 { background: var(--chart-2); }
+.swatch.s3 { background: var(--chart-3); }
+.sparkline { width: 5.5rem; height: 1.1em; vertical-align: middle; display: inline-block; }
+.sparkline path { stroke: var(--chart-1); fill: none; stroke-width: 1.5; stroke-linejoin: round; }
+
+/* --------------------------------------------------------------------------
+   Key-value metadata, disclosure, tabs, steps, timeline, sources
+   -------------------------------------------------------------------------- */
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s2) var(--s5);
+  margin-block: 0 var(--s5);
+}
+.kv dt { font-family: var(--font-ui); font-size: var(--small); color: var(--ink-3); padding-top: 0.2em; }
+.kv dd { margin: 0; }
+@media (max-width: 30rem) {
+  .kv { grid-template-columns: 1fr; gap: 0; }
+  .kv dt { padding-top: 0; }
+  .kv dd { margin-bottom: var(--s3); }
+}
+
+details { border-top: 1px solid var(--line); padding: var(--s3) 0; }
+details:not(:has(+ details)) { border-bottom: 1px solid var(--line); margin-bottom: var(--s5); }
+details > :last-child { margin-bottom: 0; }
+summary {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--small);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  gap: var(--s2);
+  align-items: baseline;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "\25B8"; color: var(--ink-3); font-size: 0.9em; transition: transform 0.15s; }
+details[open] > summary::before { transform: rotate(90deg); }
+details[open] > summary { margin-bottom: var(--s3); }
+
+.tabs { margin-block: 0 var(--s5); }
+.tablist {
+  display: flex;
+  gap: var(--s5);
+  border-bottom: 1px solid var(--line-2);
+  margin-block: 0 var(--s4);
+  overflow-x: auto;
+}
+.tab {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-weight: 500;
+  color: var(--ink-3);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: var(--s2) 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabpanel[hidden] { display: none; }
+.js .tabpanel > .tab-heading { display: none; }
+
+.steps, .timeline { list-style: none; padding: 0; margin-block: 0 var(--s5); }
+.steps { counter-reset: step; }
+.steps > li, .timeline > li {
+  display: grid;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.steps > li:last-child, .timeline > li:last-child { border-bottom: 1px solid var(--line); }
+.steps > li { grid-template-columns: 1.75rem 1fr; }
+.steps > li::before {
+  counter-increment: step;
+  content: counter(step);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  padding-top: 0.2em;
+}
+.timeline > li { grid-template-columns: minmax(7rem, max-content) 1fr; }
+.timeline .when {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  padding-top: 0.2em;
+  white-space: nowrap;
+}
+.steps > li > :last-child, .timeline > li > :last-child { margin-bottom: 0; }
+@media (max-width: 40rem) {
+  .timeline > li { grid-template-columns: 1fr; gap: var(--s1); }
+}
+
+.sources { font-size: var(--small); color: var(--ink-2); padding-left: 1.5rem; }
+.sources li { margin-bottom: var(--s2); }
+sup.fn { font-family: var(--font-ui); font-size: 0.7em; line-height: 0; }
+sup.fn a { text-decoration: none; }
+
+/* --------------------------------------------------------------------------
+   Controls (in-page only: forms cannot submit anywhere)
+   -------------------------------------------------------------------------- */
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s4);
+  align-items: flex-end;
+  margin-block: 0 var(--s5);
+  font-family: var(--font-ui);
+  font-size: var(--small);
+}
+.field { display: flex; flex-direction: column; gap: var(--s1); font-family: var(--font-ui); font-size: var(--small); }
+.field.grow { flex: 1 1 12rem; }
+label { font-family: var(--font-ui); font-size: var(--small); font-weight: 500; color: var(--ink-2); }
+.check { display: flex; gap: var(--s2); align-items: center; font-weight: 400; color: var(--ink); cursor: pointer; }
+input[type="text"], input[type="number"], input[type="search"], input[type="date"], select, textarea {
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.6rem;
+  min-height: 2.125rem;
+  max-width: 100%;
+}
+input[type="number"] { font-variant-numeric: tabular-nums; width: 8rem; }
+input::placeholder { color: var(--ink-3); }
+input:hover, select:hover, textarea:hover { border-color: var(--ink-3); }
+select {
+  appearance: none;
+  padding-right: 1.9rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%236b6d76' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 1rem; height: 1rem; margin: 0; }
+input[type="checkbox"].switch {
+  appearance: none;
+  width: 2.125rem;
+  height: 1.25rem;
+  border-radius: 1rem;
+  background: var(--control-border);
+  position: relative;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+input[type="checkbox"].switch::before {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: calc(1.25rem - 4px);
+  height: calc(1.25rem - 4px);
+  border-radius: 50%;
+  background: var(--bg);
+  transition: transform 0.15s;
+}
+input[type="checkbox"].switch:checked { background: var(--accent); }
+input[type="checkbox"].switch:checked::before { transform: translateX(0.875rem); }
+.btn {
+  font-family: var(--font-ui);
+  font-size: var(--small);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.9rem;
+  min-height: 2.125rem;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn-primary { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+output { font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
+.js-only { display: none; }
+.js .js-only { display: revert; }
+
+/* --------------------------------------------------------------------------
+   Layout: prose is held to the measure; add .wide to let an element span the
+   full column (tables, figures, stat rows, code). Keep this rule last.
+   -------------------------------------------------------------------------- */
+:where(header, main, footer, section, article, .tabs, .tabpanel) > :not(.wide, section, article, .tabs, .tabpanel, script, style) {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+.wide { max-width: none; margin-inline: auto; }
+figure.figure-inline { max-width: 20rem; }
+
+/* --------------------------------------------------------------------------
+   Print
+   -------------------------------------------------------------------------- */
+@media print {
+  :root {
+    --bg: #fff; --surface: #f4f4f4; --ink: #000; --ink-2: #333; --ink-3: #555;
+    --line: #ccc; --line-2: #999; --accent: #000; --accent-soft: #eee;
+    --text: 10.5pt; --small: 9pt; --xs: 8pt; --h1: 20pt; --h2: 14pt; --summary: 12pt; --stat: 16pt;
+  }
+  html { color-scheme: light; }
+  body { max-width: none; padding: 0; }
+  .doc-header { padding-top: 0; }
+  a { color: inherit; }
+  main a[href^="http"]:not(.link-more)::after { content: " (" attr(href) ")"; font-size: 0.85em; color: #555; word-break: break-all; }
+  .table-wrap { overflow: visible; }
+  .table-sticky thead th { position: static; }
+  thead { display: table-header-group; }
+  tr, figure, .note, .stat, pre, .steps > li, .timeline > li { break-inside: avoid; }
+  h2, h3, h4, caption { break-after: avoid; }
+  .tablist, .form-inline, .btn, input, select, .js-only { display: none !important; }
+  .tabpanel[hidden] { display: block; }
+  .js .tabpanel > .tab-heading { display: block; }
+}
+</style>
+</head>
+<body>
+
+<!-- component: header -->
+<header class="doc-header">
+  <h1>Quire components</h1>
+  <p class="summary">Every component of the manifest design language, rendered with the base stylesheet, with its markup underneath.</p>
+  <p class="meta">
+    <time datetime="2026-09-19">19 September 2026</time>
+    <span>Reference</span>
+    <span class="badge badge-accent">Current</span>
+  </p>
+</header>
+<!-- /component: header -->
+
+<main>
+  <p>This page is generated from the same stylesheet as <code>templates/base.html</code>. Each section shows a component in context, then the markup to copy. Agents: search this file for <code>component: &lt;name&gt;</code> to jump to the live markup of a component; the escaped copy under "Markup" is for people reading the rendered page.</p>
+  <details>
+    <summary>Contents</summary>
+    <ul>
+      <li><a href="#header">Page header</a></li>
+      <li><a href="#text">Headings and body text</a></li>
+      <li><a href="#links">Links</a></li>
+      <li><a href="#tables">Tables</a></li>
+      <li><a href="#tables-variants">Table variants</a></li>
+      <li><a href="#stats">Key figures</a></li>
+      <li><a href="#callouts">Callouts</a></li>
+      <li><a href="#badges">Badges and status</a></li>
+      <li><a href="#code">Code</a></li>
+      <li><a href="#figures">Images and figures</a></li>
+      <li><a href="#charts">Charts</a></li>
+      <li><a href="#kv">Key-value metadata</a></li>
+      <li><a href="#details">Disclosure</a></li>
+      <li><a href="#tabs">Tabs</a></li>
+      <li><a href="#steps">Steps and timeline</a></li>
+      <li><a href="#sources">Footnotes and sources</a></li>
+      <li><a href="#dividers">Dividers</a></li>
+      <li><a href="#controls">Inputs and controls</a></li>
+      <li><a href="#layout">Layout: measure and wide</a></li>
+    </ul>
+  </details>
+
+<section id="header">
+  <h2>Page header</h2>
+  <p>Every manifest opens the same way: a title, one sentence that states the conclusion or the contents, and a meta line with the date and author. An optional status badge goes at the end of the meta line, never above the title. The header of this page is the live example; the markup is below.</p>
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;header class="doc-header"&gt;
+  &lt;h1&gt;Ingest API outage on 12 September&lt;/h1&gt;
+  &lt;p class="summary"&gt;A worker-count change exhausted the Postgres connection pool; 41 minutes of 502s, no data loss.&lt;/p&gt;
+  &lt;p class="meta"&gt;
+    &lt;time datetime="2026-09-14"&gt;14 September 2026&lt;/time&gt;
+    &lt;span&gt;Laurent Gonzalez&lt;/span&gt;
+    &lt;span class="badge badge-ok"&gt;Resolved&lt;/span&gt;
+  &lt;/p&gt;
+&lt;/header&gt;</code></pre>
+  </details>
+</section>
+
+<section id="text">
+  <h2>Headings and body text</h2>
+  <p>Sections use h2, subsections h3. Reach for h4 rarely. Headings are sentence case and short. Body text is a serif at the measure; do not widen it.</p>
+  <!-- component: text -->
+  <h3>A subsection heading</h3>
+  <p>Body text is set in a serif at about 75 characters per line. Paragraphs are separated by space, not indented. Use <strong>bold</strong> for the one phrase a skimming reader must not miss, <em>italics</em> for titles and emphasis, and <code>inline code</code> for identifiers, paths and commands. Press <kbd>Cmd</kbd> <kbd>K</kbd> to search. The <abbr title="Content Security Policy">CSP</abbr> blocks external requests.</p>
+  <h4>A rare fourth level</h4>
+  <p>Keep h4 for long reference documents. If you need it in a short page, the structure is probably wrong.</p>
+  <ul>
+    <li>Unordered lists for items with no sequence.</li>
+    <li>Keep each item to one or two lines. Longer items want to be paragraphs.
+      <ul><li>Nest one level at most.</li></ul>
+    </li>
+  </ul>
+  <ol>
+    <li>Ordered lists only when order matters.</li>
+    <li>For processes and timelines, use the steps or timeline components instead.</li>
+  </ol>
+  <blockquote>
+    <p>Quotations from a source, a ticket or a person. Attribute them in the paragraph that follows.</p>
+  </blockquote>
+  <!-- /component: text -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;h3&gt;A subsection heading&lt;/h3&gt;
+&lt;p&gt;Body text is set in a serif at about 75 characters per line. Paragraphs are separated by space, not indented. Use &lt;strong&gt;bold&lt;/strong&gt; for the one phrase a skimming reader must not miss, &lt;em&gt;italics&lt;/em&gt; for titles and emphasis, and &lt;code&gt;inline code&lt;/code&gt; for identifiers, paths and commands. Press &lt;kbd&gt;Cmd&lt;/kbd&gt; &lt;kbd&gt;K&lt;/kbd&gt; to search. The &lt;abbr title="Content Security Policy"&gt;CSP&lt;/abbr&gt; blocks external requests.&lt;/p&gt;
+&lt;h4&gt;A rare fourth level&lt;/h4&gt;
+&lt;p&gt;Keep h4 for long reference documents. If you need it in a short page, the structure is probably wrong.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Unordered lists for items with no sequence.&lt;/li&gt;
+  &lt;li&gt;Keep each item to one or two lines. Longer items want to be paragraphs.
+    &lt;ul&gt;&lt;li&gt;Nest one level at most.&lt;/li&gt;&lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+  &lt;li&gt;Ordered lists only when order matters.&lt;/li&gt;
+  &lt;li&gt;For processes and timelines, use the steps or timeline components instead.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Quotations from a source, a ticket or a person. Attribute them in the paragraph that follows.&lt;/p&gt;
+&lt;/blockquote&gt;</code></pre>
+  </details>
+</section>
+
+<section id="links">
+  <h2>Links</h2>
+  <p>Inline links are teal and underlined, the only decorated text in a paragraph. Standalone links get an arrow and are for "where next" at the end of a section; keep them to a handful per page. External links can carry the outward arrow when it helps the reader know they are leaving.</p>
+  <!-- component: links -->
+  <p>The retry change shipped in <a href="https://example.com/pr/4821">PR 4821</a> and the runbook lives in <a class="ext" href="https://example.com/runbooks/ingest">the ops wiki</a>.</p>
+  <p><a class="link-more" href="#tables">See the full table</a></p>
+  <!-- /component: links -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;p&gt;The retry change shipped in &lt;a href="https://example.com/pr/4821"&gt;PR 4821&lt;/a&gt; and the runbook lives in &lt;a class="ext" href="https://example.com/runbooks/ingest"&gt;the ops wiki&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a class="link-more" href="#tables"&gt;See the full table&lt;/a&gt;&lt;/p&gt;</code></pre>
+  </details>
+</section>
+
+<section id="tables">
+  <h2>Tables</h2>
+  <p>Tables are sans, one size smaller than body text, with hairlines between rows and no zebra striping. Wrap every table in <code>&lt;div class="table-wrap"&gt;</code> so it scrolls sideways on a phone instead of widening the page. Numeric columns carry <code>class="num"</code> on both the header and the cells: right-aligned, tabular figures, same number of decimals down the column. Units go in the header, not in every cell. Put the caption above the table and say what the numbers are and when they were taken.</p>
+  <!-- component: tables -->
+  <div class="table-wrap">
+  <table>
+    <caption>Connection use by service, 12 September 2026, 14:00 to 15:00 UTC <span class="muted">(sampled every minute)</span></caption>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Pool</th>
+        <th class="num">Workers</th>
+        <th class="num">Peak connections</th>
+        <th class="num">Share (%)</th>
+        <th class="num">Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ingest-api</td>
+        <td>primary</td>
+        <td class="num">24</td>
+        <td class="num">72</td>
+        <td class="num">72.0</td>
+        <td class="num delta-bad">+48</td>
+      </tr>
+      <tr class="highlight">
+        <td>sync-worker</td>
+        <td>primary</td>
+        <td class="num">8</td>
+        <td class="num">16</td>
+        <td class="num">16.0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>reporting</td>
+        <td>replica</td>
+        <td class="num">4</td>
+        <td class="num">8</td>
+        <td class="num">8.0</td>
+        <td class="num delta-good">&minus;2</td>
+      </tr>
+      <tr class="dim">
+        <td>admin</td>
+        <td>primary</td>
+        <td class="num">2</td>
+        <td class="num">4</td>
+        <td class="num">4.0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr class="total">
+        <th scope="row">Total</th>
+        <td></td>
+        <td class="num">38</td>
+        <td class="num">100</td>
+        <td class="num">100.0</td>
+        <td class="num">+46</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="table-note">Peak is the highest one-minute sample. Change is against the previous deploy.</p>
+  <!-- /component: tables -->
+  <p>Row emphasis: <code>tr.total</code> for a totals row (bold, rule above), <code>tr.highlight</code> for the one row the text is about, <code>tr.dim</code> for rows the reader can skip. Delta colors <code>.delta-good</code> and <code>.delta-bad</code> mean better and worse, not up and down. Use a real minus sign (<code>&amp;minus;</code>).</p>
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;div class="table-wrap"&gt;
+&lt;table&gt;
+  &lt;caption&gt;Connection use by service, 12 September 2026, 14:00 to 15:00 UTC &lt;span class="muted"&gt;(sampled every minute)&lt;/span&gt;&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Service&lt;/th&gt;
+      &lt;th&gt;Pool&lt;/th&gt;
+      &lt;th class="num"&gt;Workers&lt;/th&gt;
+      &lt;th class="num"&gt;Peak connections&lt;/th&gt;
+      &lt;th class="num"&gt;Share (%)&lt;/th&gt;
+      &lt;th class="num"&gt;Change&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;ingest-api&lt;/td&gt;
+      &lt;td&gt;primary&lt;/td&gt;
+      &lt;td class="num"&gt;24&lt;/td&gt;
+      &lt;td class="num"&gt;72&lt;/td&gt;
+      &lt;td class="num"&gt;72.0&lt;/td&gt;
+      &lt;td class="num delta-bad"&gt;+48&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr class="highlight"&gt;
+      &lt;td&gt;sync-worker&lt;/td&gt;
+      &lt;td&gt;primary&lt;/td&gt;
+      &lt;td class="num"&gt;8&lt;/td&gt;
+      &lt;td class="num"&gt;16&lt;/td&gt;
+      &lt;td class="num"&gt;16.0&lt;/td&gt;
+      &lt;td class="num"&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;reporting&lt;/td&gt;
+      &lt;td&gt;replica&lt;/td&gt;
+      &lt;td class="num"&gt;4&lt;/td&gt;
+      &lt;td class="num"&gt;8&lt;/td&gt;
+      &lt;td class="num"&gt;8.0&lt;/td&gt;
+      &lt;td class="num delta-good"&gt;&amp;minus;2&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr class="dim"&gt;
+      &lt;td&gt;admin&lt;/td&gt;
+      &lt;td&gt;primary&lt;/td&gt;
+      &lt;td class="num"&gt;2&lt;/td&gt;
+      &lt;td class="num"&gt;4&lt;/td&gt;
+      &lt;td class="num"&gt;4.0&lt;/td&gt;
+      &lt;td class="num"&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr class="total"&gt;
+      &lt;th scope="row"&gt;Total&lt;/th&gt;
+      &lt;td&gt;&lt;/td&gt;
+      &lt;td class="num"&gt;38&lt;/td&gt;
+      &lt;td class="num"&gt;100&lt;/td&gt;
+      &lt;td class="num"&gt;100.0&lt;/td&gt;
+      &lt;td class="num"&gt;+46&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;p class="table-note"&gt;Peak is the highest one-minute sample. Change is against the previous deploy.&lt;/p&gt;</code></pre>
+  </details>
+</section>
+
+<section id="tables-variants">
+  <h2>Table variants</h2>
+  <p>Add <code>.wide</code> on the <code>.table-wrap</code> when the table has more than four or five columns. <code>.table-compact</code> tightens padding for long reference tables. <code>.table-sticky</code> keeps the header visible while scrolling a long table; on screens wider than a phone the wrapper stops scrolling so the header can stick, so keep the columns within the wide width. <code>.sortable</code> makes headers clickable when JS is on. Add <code>.nowrap</code> to a cell whose text must not break (identifiers, dates).</p>
+  <!-- component: tables-variants -->
+  <div class="table-wrap wide">
+    <table class="table-compact table-sticky sortable" id="endpoints">
+      <caption>Endpoint latency, last 7 days</caption>
+      <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th>Owner</th>
+          <th class="num">Requests</th>
+          <th class="num">p50 (ms)</th>
+          <th class="num">p95 (ms)</th>
+          <th class="num">Errors (%)</th>
+          <th>Trend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>POST /transactions</code></td><td>ingest</td><td class="num">1,204,311</td><td class="num">84</td><td class="num">420</td><td class="num">0.31</td><td><svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M0 18 L16.7 16.9 L33.3 17.5 L50 10 L66.7 2 L83.3 3.1 L100 12.1"/></svg></td></tr>
+        <tr><td><code>GET /balances</code></td><td>ledger</td><td class="num">842,020</td><td class="num">61</td><td class="num">310</td><td class="num">0.08</td><td><svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M0 18 L16.7 10 L33.3 14 L50 6 L66.7 10 L83.3 2 L100 6"/></svg></td></tr>
+        <tr><td><code>POST /sync</code></td><td>ingest</td><td class="num">96,400</td><td class="num">140</td><td class="num">275</td><td class="num">1.20</td><td><svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M0 18 L16.7 14.8 L33.3 16.4 L50 2 L66.7 3.6 L83.3 13.2 L100 16.4"/></svg></td></tr>
+        <tr><td><code>POST /auth/token</code></td><td>platform</td><td class="num">402,118</td><td class="num">22</td><td class="num">120</td><td class="num">0.02</td><td><svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M0 18 L16.7 18 L33.3 2 L50 18 L66.7 18 L83.3 2 L100 18"/></svg></td></tr>
+        <tr><td><code>GET /health</code></td><td>platform</td><td class="num">2,600,000</td><td class="num">3</td><td class="num">40</td><td class="num">0.00</td><td><svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M0 18 L16.7 18 L33.3 18 L50 18 L66.7 18 L83.3 18 L100 18"/></svg></td></tr>
+        <tr class="empty"><td class="empty" colspan="7">No endpoints match.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">A note under a wide table spans the same width, so it lines up with the table's left edge.</p>
+  <!-- /component: tables-variants -->
+  <p>An empty state is a single <code>td.empty</code> spanning all columns, with a sentence that says why it is empty and what would fill it. The <code>tr.empty</code> row above is hidden by JS until a filter matches nothing; without JS you would include it only when the table really is empty.</p>
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;div class="table-wrap wide"&gt;
+  &lt;table class="table-compact table-sticky sortable" id="endpoints"&gt;
+    &lt;caption&gt;Endpoint latency, last 7 days&lt;/caption&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;Endpoint&lt;/th&gt;
+        &lt;th&gt;Owner&lt;/th&gt;
+        &lt;th class="num"&gt;Requests&lt;/th&gt;
+        &lt;th class="num"&gt;p50 (ms)&lt;/th&gt;
+        &lt;th class="num"&gt;p95 (ms)&lt;/th&gt;
+        &lt;th class="num"&gt;Errors (%)&lt;/th&gt;
+        &lt;th&gt;Trend&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;&lt;td&gt;&lt;code&gt;POST /transactions&lt;/code&gt;&lt;/td&gt;&lt;td&gt;ingest&lt;/td&gt;&lt;td class="num"&gt;1,204,311&lt;/td&gt;&lt;td class="num"&gt;84&lt;/td&gt;&lt;td class="num"&gt;420&lt;/td&gt;&lt;td class="num"&gt;0.31&lt;/td&gt;&lt;td&gt;&lt;svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"&gt;&lt;path vector-effect="non-scaling-stroke" d="M0 18 L16.7 16.9 L33.3 17.5 L50 10 L66.7 2 L83.3 3.1 L100 12.1"/&gt;&lt;/svg&gt;&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;td&gt;&lt;code&gt;GET /balances&lt;/code&gt;&lt;/td&gt;&lt;td&gt;ledger&lt;/td&gt;&lt;td class="num"&gt;842,020&lt;/td&gt;&lt;td class="num"&gt;61&lt;/td&gt;&lt;td class="num"&gt;310&lt;/td&gt;&lt;td class="num"&gt;0.08&lt;/td&gt;&lt;td&gt;&lt;svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"&gt;&lt;path vector-effect="non-scaling-stroke" d="M0 18 L16.7 10 L33.3 14 L50 6 L66.7 10 L83.3 2 L100 6"/&gt;&lt;/svg&gt;&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;td&gt;&lt;code&gt;POST /sync&lt;/code&gt;&lt;/td&gt;&lt;td&gt;ingest&lt;/td&gt;&lt;td class="num"&gt;96,400&lt;/td&gt;&lt;td class="num"&gt;140&lt;/td&gt;&lt;td class="num"&gt;275&lt;/td&gt;&lt;td class="num"&gt;1.20&lt;/td&gt;&lt;td&gt;&lt;svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"&gt;&lt;path vector-effect="non-scaling-stroke" d="M0 18 L16.7 14.8 L33.3 16.4 L50 2 L66.7 3.6 L83.3 13.2 L100 16.4"/&gt;&lt;/svg&gt;&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;td&gt;&lt;code&gt;POST /auth/token&lt;/code&gt;&lt;/td&gt;&lt;td&gt;platform&lt;/td&gt;&lt;td class="num"&gt;402,118&lt;/td&gt;&lt;td class="num"&gt;22&lt;/td&gt;&lt;td class="num"&gt;120&lt;/td&gt;&lt;td class="num"&gt;0.02&lt;/td&gt;&lt;td&gt;&lt;svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"&gt;&lt;path vector-effect="non-scaling-stroke" d="M0 18 L16.7 18 L33.3 2 L50 18 L66.7 18 L83.3 2 L100 18"/&gt;&lt;/svg&gt;&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;td&gt;&lt;code&gt;GET /health&lt;/code&gt;&lt;/td&gt;&lt;td&gt;platform&lt;/td&gt;&lt;td class="num"&gt;2,600,000&lt;/td&gt;&lt;td class="num"&gt;3&lt;/td&gt;&lt;td class="num"&gt;40&lt;/td&gt;&lt;td class="num"&gt;0.00&lt;/td&gt;&lt;td&gt;&lt;svg class="sparkline" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"&gt;&lt;path vector-effect="non-scaling-stroke" d="M0 18 L16.7 18 L33.3 18 L50 18 L66.7 18 L83.3 18 L100 18"/&gt;&lt;/svg&gt;&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr class="empty"&gt;&lt;td class="empty" colspan="7"&gt;No endpoints match.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;
+&lt;p class="table-note"&gt;A note under a wide table spans the same width, so it lines up with the table's left edge.&lt;/p&gt;</code></pre>
+  </details>
+</section>
+
+<section id="stats">
+  <h2>Key figures</h2>
+  <p>A row of three to five figures the reader should carry away. Each has a rule above, the number, and a label that says what the number is (with unit and period). Optional note underneath for a comparison. Use <code>.wide</code> for five figures.</p>
+  <!-- component: stats -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-value">41<small>min</small></span>
+      <span class="stat-label">Duration of the outage</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">18,400</span>
+      <span class="stat-label">Requests failed</span>
+      <span class="stat-note muted">0.6% of the day</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">63%</span>
+      <span class="stat-label">Peak error rate</span>
+      <span class="stat-note delta-bad">from 0.3% baseline</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">14<small>min</small></span>
+      <span class="stat-label">Time to first alert</span>
+    </div>
+  </div>
+  <!-- /component: stats -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;div class="stats"&gt;
+  &lt;div class="stat"&gt;
+    &lt;span class="stat-value"&gt;41&lt;small&gt;min&lt;/small&gt;&lt;/span&gt;
+    &lt;span class="stat-label"&gt;Duration of the outage&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="stat"&gt;
+    &lt;span class="stat-value"&gt;18,400&lt;/span&gt;
+    &lt;span class="stat-label"&gt;Requests failed&lt;/span&gt;
+    &lt;span class="stat-note muted"&gt;0.6% of the day&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="stat"&gt;
+    &lt;span class="stat-value"&gt;63%&lt;/span&gt;
+    &lt;span class="stat-label"&gt;Peak error rate&lt;/span&gt;
+    &lt;span class="stat-note delta-bad"&gt;from 0.3% baseline&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="stat"&gt;
+    &lt;span class="stat-value"&gt;14&lt;small&gt;min&lt;/small&gt;&lt;/span&gt;
+    &lt;span class="stat-label"&gt;Time to first alert&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+  </details>
+</section>
+
+<section id="callouts">
+  <h2>Callouts</h2>
+  <p>Three kinds, all on the same neutral surface with a colored rule on the left. Plain <code>.note</code> for an aside; <code>.note-info</code> for context the reader needs before going on; <code>.note-warn</code> for a caveat, a risk or a known limitation; <code>.note-decision</code> for what was decided and who decided it. One or two per page. If everything is a callout, nothing is.</p>
+  <!-- component: callouts -->
+  <div class="note">
+    <p class="note-title">Note</p>
+    <p>Numbers in this page come from the Grafana dashboard on 14 September; the retention window is 30 days.</p>
+  </div>
+  <div class="note note-info">
+    <p class="note-title">How the pool is sized</p>
+    <p>Each worker holds one connection for the life of a request. With 24 workers per pod and 3 pods, ingest-api alone can take 72 of the 100 connections Postgres allows.</p>
+  </div>
+  <div class="note note-warn">
+    <p class="note-title">The alert fired late</p>
+    <p>The 5xx alert has a 10-minute window, so the page went out 14 minutes after the first failed request. This is fixed in the follow-ups but was true during the incident.</p>
+  </div>
+  <div class="note note-decision">
+    <p class="note-title">Decision</p>
+    <p>Put PgBouncer in transaction mode in front of the primary and cap ingest-api at 8 workers per pod. Owner: Laurent. Due: 26 September.</p>
+  </div>
+  <!-- /component: callouts -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;div class="note"&gt;
+  &lt;p class="note-title"&gt;Note&lt;/p&gt;
+  &lt;p&gt;Numbers in this page come from the Grafana dashboard on 14 September; the retention window is 30 days.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="note note-info"&gt;
+  &lt;p class="note-title"&gt;How the pool is sized&lt;/p&gt;
+  &lt;p&gt;Each worker holds one connection for the life of a request. With 24 workers per pod and 3 pods, ingest-api alone can take 72 of the 100 connections Postgres allows.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="note note-warn"&gt;
+  &lt;p class="note-title"&gt;The alert fired late&lt;/p&gt;
+  &lt;p&gt;The 5xx alert has a 10-minute window, so the page went out 14 minutes after the first failed request. This is fixed in the follow-ups but was true during the incident.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="note note-decision"&gt;
+  &lt;p class="note-title"&gt;Decision&lt;/p&gt;
+  &lt;p&gt;Put PgBouncer in transaction mode in front of the primary and cap ingest-api at 8 workers per pod. Owner: Laurent. Due: 26 September.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+  </details>
+</section>
+
+<section id="badges">
+  <h2>Badges and status</h2>
+  <p>Small sans labels for state. The neutral badge is the default; the colored ones only when the color means something (green is good, amber needs attention, red is broken, teal is "active" or "current"). Never more than one badge per row or per heading.</p>
+  <!-- component: badges -->
+  <p>
+    <span class="badge">Draft</span>
+    <span class="badge badge-ok">Resolved</span>
+    <span class="badge badge-warn">Degraded</span>
+    <span class="badge badge-bad">Failing</span>
+    <span class="badge badge-accent">Current</span>
+  </p>
+  <!-- /component: badges -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;p&gt;
+  &lt;span class="badge"&gt;Draft&lt;/span&gt;
+  &lt;span class="badge badge-ok"&gt;Resolved&lt;/span&gt;
+  &lt;span class="badge badge-warn"&gt;Degraded&lt;/span&gt;
+  &lt;span class="badge badge-bad"&gt;Failing&lt;/span&gt;
+  &lt;span class="badge badge-accent"&gt;Current&lt;/span&gt;
+&lt;/p&gt;</code></pre>
+  </details>
+</section>
+
+<section id="code">
+  <h2>Code</h2>
+  <p>Inline code for identifiers. Blocks for commands, config and logs, with a short sentence before them saying what the reader is looking at. Blocks scroll sideways rather than wrapping. No syntax highlighting: it would need colors outside the tokens, and it is not what the reader is here for.</p>
+  <!-- component: code -->
+      <p>The pool size comes from <code>DB_POOL_MAX</code>, read once at startup:</p>
+      <pre><code>$ kubectl get deploy ingest-api -o jsonpath='{.spec.template.spec.containers[0].env}'
+  [{"name":"WORKERS","value":"24"},{"name":"DB_POOL_MAX","value":"1"}]
+  
+  2026-09-12T14:07:41Z  ERROR  pool exhausted: 100/100 connections in use, waited 5000ms
+  2026-09-12T14:07:41Z  WARN   returning 502 for POST /transactions (req_3f9a...)</code></pre>
+  <!-- /component: code -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>    &lt;p&gt;The pool size comes from &lt;code&gt;DB_POOL_MAX&lt;/code&gt;, read once at startup:&lt;/p&gt;
+    &lt;pre&gt;&lt;code&gt;$ kubectl get deploy ingest-api -o jsonpath='{.spec.template.spec.containers[0].env}'
+[{"name":"WORKERS","value":"24"},{"name":"DB_POOL_MAX","value":"1"}]
+
+2026-09-12T14:07:41Z  ERROR  pool exhausted: 100/100 connections in use, waited 5000ms
+2026-09-12T14:07:41Z  WARN   returning 502 for POST /transactions (req_3f9a...)&lt;/code&gt;&lt;/pre&gt;</code></pre>
+  </details>
+</section>
+
+<section id="figures">
+  <h2>Images and figures</h2>
+  <p>Images are <code>data:</code> URIs (compressed; a screenshot should be under 150 KB). Every figure has a caption that says what is shown and, where it matters, when. Add <code>.framed</code> to screenshots so their white edges do not dissolve into the page. Use <code>.wide</code> for images that need the room, <code>.figure-inline</code> for a small illustrative one, and <code>.figure-pair</code> for a before/after.</p>
+  <!-- component: figures -->
+  <figure class="wide">
+    <img class="framed" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='420' viewBox='0 0 1200 420'><rect width='1200' height='420' fill='%23dcdcd8'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'>Full-width figure (wide)</text></svg>" alt="Grafana panel showing 5xx rate rising to 63% at 14:07 and recovering at 14:48" width="1200" height="420">
+    <figcaption><b>Figure 1.</b> 5xx rate for ingest-api, 12 September 2026, 13:30 to 15:30 UTC. The dashed line is the deploy.</figcaption>
+  </figure>
+  <figure class="figure-inline">
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='300' viewBox='0 0 480 300'><rect width='480' height='300' fill='%23dcdcd8'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'>Inline figure</text></svg>" alt="Diagram of three pods sharing one Postgres primary" width="480" height="300">
+    <figcaption>Three pods, one primary, one pool limit.</figcaption>
+  </figure>
+  <div class="figure-pair wide">
+    <figure>
+      <img class="framed" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'><rect width='600' height='340' fill='%23dcdcd8'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'>Before</text></svg>" alt="Connection graph before the change, flat at 30" width="600" height="340">
+      <figcaption>Before: 30 connections at peak.</figcaption>
+    </figure>
+    <figure>
+      <img class="framed" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'><rect width='600' height='340' fill='%23dcdcd8'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'>After</text></svg>" alt="Connection graph after the change, pinned at 100" width="600" height="340">
+      <figcaption>After: pinned at the 100-connection limit.</figcaption>
+    </figure>
+  </div>
+  <!-- /component: figures -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;figure class="wide"&gt;
+  &lt;img class="framed" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='1200' height='420' viewBox='0 0 1200 420'&gt;&lt;rect width='1200' height='420' fill='%23dcdcd8'/&gt;&lt;text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'&gt;Full-width figure (wide)&lt;/text&gt;&lt;/svg&gt;" alt="Grafana panel showing 5xx rate rising to 63% at 14:07 and recovering at 14:48" width="1200" height="420"&gt;
+  &lt;figcaption&gt;&lt;b&gt;Figure 1.&lt;/b&gt; 5xx rate for ingest-api, 12 September 2026, 13:30 to 15:30 UTC. The dashed line is the deploy.&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;figure class="figure-inline"&gt;
+  &lt;img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='480' height='300' viewBox='0 0 480 300'&gt;&lt;rect width='480' height='300' fill='%23dcdcd8'/&gt;&lt;text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'&gt;Inline figure&lt;/text&gt;&lt;/svg&gt;" alt="Diagram of three pods sharing one Postgres primary" width="480" height="300"&gt;
+  &lt;figcaption&gt;Three pods, one primary, one pool limit.&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;div class="figure-pair wide"&gt;
+  &lt;figure&gt;
+    &lt;img class="framed" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'&gt;&lt;rect width='600' height='340' fill='%23dcdcd8'/&gt;&lt;text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'&gt;Before&lt;/text&gt;&lt;/svg&gt;" alt="Connection graph before the change, flat at 30" width="600" height="340"&gt;
+    &lt;figcaption&gt;Before: 30 connections at peak.&lt;/figcaption&gt;
+  &lt;/figure&gt;
+  &lt;figure&gt;
+    &lt;img class="framed" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'&gt;&lt;rect width='600' height='340' fill='%23dcdcd8'/&gt;&lt;text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-size='16' fill='%236b6d76'&gt;After&lt;/text&gt;&lt;/svg&gt;" alt="Connection graph after the change, pinned at 100" width="600" height="340"&gt;
+    &lt;figcaption&gt;After: pinned at the 100-connection limit.&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;</code></pre>
+  </details>
+</section>
+
+<section id="charts">
+  <h2>Charts</h2>
+  <p>Charts are inline SVG built from the chart tokens, inside a <code>figure.chart</code> with a caption. Rules: one message per chart, stated in the caption. Horizontal bars for comparing categories (labels read naturally). Lines for change over time, with at most three series, a light grid, and the y-axis starting at zero. Label values directly where you can instead of adding a legend. Sparklines in tables show shape only, no axes. No 3D, no gradients, no pie charts.</p>
+  <!-- component: charts -->
+      <figure class="chart" id="chart-1bc9fd">
+    <svg viewBox="0 0 600 120" role="img" aria-labelledby="chart-1bc9fd-t chart-1bc9fd-d">
+      <title id="chart-1bc9fd-t">p95 latency by endpoint, last 7 days</title>
+      <desc id="chart-1bc9fd-d">POST /transactions 420 ms; GET /balances 310 ms; POST /sync 275 ms; POST /auth/token 120 ms; GET /health 40 ms.</desc>
+      <text class="strong" text-anchor="end"><tspan x="143" y="12">POST /transactions</tspan></text>
+      <rect class="s1" x="155" y="0" width="325.1" height="16"/>
+      <text x="486.1" y="12">420 ms</text>
+      <text class="strong" text-anchor="end"><tspan x="143" y="38">GET /balances</tspan></text>
+      <rect class="s1" x="155" y="26" width="239.9" height="16"/>
+      <text x="400.9" y="38">310 ms</text>
+      <text class="strong" text-anchor="end"><tspan x="143" y="64">POST /sync</tspan></text>
+      <rect class="s1" x="155" y="52" width="212.9" height="16"/>
+      <text x="373.9" y="64">275 ms</text>
+      <text class="strong" text-anchor="end"><tspan x="143" y="90">POST /auth/token</tspan></text>
+      <rect class="s1" x="155" y="78" width="92.9" height="16"/>
+      <text x="253.9" y="90">120 ms</text>
+      <text class="strong" text-anchor="end"><tspan x="143" y="116">GET /health</tspan></text>
+      <rect class="s1" x="155" y="104" width="31" height="16"/>
+      <text x="192" y="116">40 ms</text>
+    </svg>
+    <figcaption><b>Figure 2.</b> p95 latency by endpoint, last 7 days. Transactions is 35% slower than the next endpoint.</figcaption>
+  </figure>
+      <figure class="chart wide" id="chart-d7ef17">
+    <div class="legend"><span><i class="swatch"></i>5xx rate</span><span><i class="swatch s2"></i>Connections in use</span></div>
+    <svg viewBox="0 0 920 220" role="img" aria-labelledby="chart-d7ef17-t chart-d7ef17-d">
+      <title id="chart-d7ef17-t">Error rate and connection use, 13:30 to 15:30 UTC</title>
+      <desc id="chart-d7ef17-d">5xx rate: 0% at 13:30, peak 63% at point 8, 0% at 15:30. Connections in use: 30% at 13:30, peak 100% at point 7, 30% at 15:30. Marker at 14:00.</desc>
+      <line class="axis" x1="47" x2="897" y1="192" y2="192"/>
+      <text x="41" y="196" text-anchor="end">0%</text>
+      <line class="grid" x1="47" x2="897" y1="147" y2="147"/>
+      <text x="41" y="151" text-anchor="end">25%</text>
+      <line class="grid" x1="47" x2="897" y1="102" y2="102"/>
+      <text x="41" y="106" text-anchor="end">50%</text>
+      <line class="grid" x1="47" x2="897" y1="57" y2="57"/>
+      <text x="41" y="61" text-anchor="end">75%</text>
+      <line class="grid" x1="47" x2="897" y1="12" y2="12"/>
+      <text x="41" y="16" text-anchor="end">100%</text>
+      <text x="47" y="212" text-anchor="middle">13:30</text>
+      <text x="273.7" y="212" text-anchor="middle">14:00</text>
+      <text x="500.3" y="212" text-anchor="middle">14:30</text>
+      <text x="727" y="212" text-anchor="middle">15:00</text>
+      <text x="897" y="212" text-anchor="middle">15:30</text>
+      <line class="marker" x1="273.7" x2="273.7" y1="12" y2="192"/>
+      <path class="area1" d="M47 192 L103.7 192 L160.3 192 L217 190.2 L273.7 188.4 L330.3 123.6 L387 82.2 L443.7 78.6 L500.3 84 L557 85.8 L613.7 156 L670.3 188.4 L727 192 L783.7 192 L840.3 192 L897 192 L897 192 L47 192 Z"/>
+      <path class="l1" d="M47 192 L103.7 192 L160.3 192 L217 190.2 L273.7 188.4 L330.3 123.6 L387 82.2 L443.7 78.6 L500.3 84 L557 85.8 L613.7 156 L670.3 188.4 L727 192 L783.7 192 L840.3 192 L897 192"/>
+      <path class="l2" d="M47 138 L103.7 136.2 L160.3 138 L217 134.4 L273.7 120 L330.3 19.2 L387 12 L443.7 12 L500.3 12 L557 12 L613.7 12 L670.3 66 L727 130.8 L783.7 136.2 L840.3 138 L897 138"/>
+    </svg>
+    <figcaption><b>Figure 3.</b> Error rate and connection use, 12 September 2026, 13:30 to 15:30 UTC. Connections is shown as percent of the 100 limit. The dashed line marks the deploy at 14:00.</figcaption>
+  </figure>
+  <!-- /component: charts -->
+  <p>Building one: never hand-compute coordinates. Write a JSON spec and run <code>bun SKILL_DIR/scripts/chart.ts spec.json</code>; it prints the whole <code>figure.chart</code> (legend, SVG, caption) ready to paste. Types: <code>hbar</code>, <code>bar</code>, <code>line</code>, <code>sparkline</code>; <code>bun SKILL_DIR/scripts/chart.ts --help</code> shows a spec for each. It measures the label gutter from the longest label, wraps long labels, keeps text inside the <code>viewBox</code>, formats numbers, and names the chart for screen readers with <code>&lt;title&gt;</code> and <code>&lt;desc&gt;</code> listing the values. Both charts above come from it. Dark mode works automatically because every color is a CSS variable.</p>
+  <details>
+    <summary>Markup</summary>
+    <pre><code>    &lt;figure class="chart" id="chart-1bc9fd"&gt;
+  &lt;svg viewBox="0 0 600 120" role="img" aria-labelledby="chart-1bc9fd-t chart-1bc9fd-d"&gt;
+    &lt;title id="chart-1bc9fd-t"&gt;p95 latency by endpoint, last 7 days&lt;/title&gt;
+    &lt;desc id="chart-1bc9fd-d"&gt;POST /transactions 420 ms; GET /balances 310 ms; POST /sync 275 ms; POST /auth/token 120 ms; GET /health 40 ms.&lt;/desc&gt;
+    &lt;text class="strong" text-anchor="end"&gt;&lt;tspan x="143" y="12"&gt;POST /transactions&lt;/tspan&gt;&lt;/text&gt;
+    &lt;rect class="s1" x="155" y="0" width="325.1" height="16"/&gt;
+    &lt;text x="486.1" y="12"&gt;420 ms&lt;/text&gt;
+    &lt;text class="strong" text-anchor="end"&gt;&lt;tspan x="143" y="38"&gt;GET /balances&lt;/tspan&gt;&lt;/text&gt;
+    &lt;rect class="s1" x="155" y="26" width="239.9" height="16"/&gt;
+    &lt;text x="400.9" y="38"&gt;310 ms&lt;/text&gt;
+    &lt;text class="strong" text-anchor="end"&gt;&lt;tspan x="143" y="64"&gt;POST /sync&lt;/tspan&gt;&lt;/text&gt;
+    &lt;rect class="s1" x="155" y="52" width="212.9" height="16"/&gt;
+    &lt;text x="373.9" y="64"&gt;275 ms&lt;/text&gt;
+    &lt;text class="strong" text-anchor="end"&gt;&lt;tspan x="143" y="90"&gt;POST /auth/token&lt;/tspan&gt;&lt;/text&gt;
+    &lt;rect class="s1" x="155" y="78" width="92.9" height="16"/&gt;
+    &lt;text x="253.9" y="90"&gt;120 ms&lt;/text&gt;
+    &lt;text class="strong" text-anchor="end"&gt;&lt;tspan x="143" y="116"&gt;GET /health&lt;/tspan&gt;&lt;/text&gt;
+    &lt;rect class="s1" x="155" y="104" width="31" height="16"/&gt;
+    &lt;text x="192" y="116"&gt;40 ms&lt;/text&gt;
+  &lt;/svg&gt;
+  &lt;figcaption&gt;&lt;b&gt;Figure 2.&lt;/b&gt; p95 latency by endpoint, last 7 days. Transactions is 35% slower than the next endpoint.&lt;/figcaption&gt;
+&lt;/figure&gt;
+    &lt;figure class="chart wide" id="chart-d7ef17"&gt;
+  &lt;div class="legend"&gt;&lt;span&gt;&lt;i class="swatch"&gt;&lt;/i&gt;5xx rate&lt;/span&gt;&lt;span&gt;&lt;i class="swatch s2"&gt;&lt;/i&gt;Connections in use&lt;/span&gt;&lt;/div&gt;
+  &lt;svg viewBox="0 0 920 220" role="img" aria-labelledby="chart-d7ef17-t chart-d7ef17-d"&gt;
+    &lt;title id="chart-d7ef17-t"&gt;Error rate and connection use, 13:30 to 15:30 UTC&lt;/title&gt;
+    &lt;desc id="chart-d7ef17-d"&gt;5xx rate: 0% at 13:30, peak 63% at point 8, 0% at 15:30. Connections in use: 30% at 13:30, peak 100% at point 7, 30% at 15:30. Marker at 14:00.&lt;/desc&gt;
+    &lt;line class="axis" x1="47" x2="897" y1="192" y2="192"/&gt;
+    &lt;text x="41" y="196" text-anchor="end"&gt;0%&lt;/text&gt;
+    &lt;line class="grid" x1="47" x2="897" y1="147" y2="147"/&gt;
+    &lt;text x="41" y="151" text-anchor="end"&gt;25%&lt;/text&gt;
+    &lt;line class="grid" x1="47" x2="897" y1="102" y2="102"/&gt;
+    &lt;text x="41" y="106" text-anchor="end"&gt;50%&lt;/text&gt;
+    &lt;line class="grid" x1="47" x2="897" y1="57" y2="57"/&gt;
+    &lt;text x="41" y="61" text-anchor="end"&gt;75%&lt;/text&gt;
+    &lt;line class="grid" x1="47" x2="897" y1="12" y2="12"/&gt;
+    &lt;text x="41" y="16" text-anchor="end"&gt;100%&lt;/text&gt;
+    &lt;text x="47" y="212" text-anchor="middle"&gt;13:30&lt;/text&gt;
+    &lt;text x="273.7" y="212" text-anchor="middle"&gt;14:00&lt;/text&gt;
+    &lt;text x="500.3" y="212" text-anchor="middle"&gt;14:30&lt;/text&gt;
+    &lt;text x="727" y="212" text-anchor="middle"&gt;15:00&lt;/text&gt;
+    &lt;text x="897" y="212" text-anchor="middle"&gt;15:30&lt;/text&gt;
+    &lt;line class="marker" x1="273.7" x2="273.7" y1="12" y2="192"/&gt;
+    &lt;path class="area1" d="M47 192 L103.7 192 L160.3 192 L217 190.2 L273.7 188.4 L330.3 123.6 L387 82.2 L443.7 78.6 L500.3 84 L557 85.8 L613.7 156 L670.3 188.4 L727 192 L783.7 192 L840.3 192 L897 192 L897 192 L47 192 Z"/&gt;
+    &lt;path class="l1" d="M47 192 L103.7 192 L160.3 192 L217 190.2 L273.7 188.4 L330.3 123.6 L387 82.2 L443.7 78.6 L500.3 84 L557 85.8 L613.7 156 L670.3 188.4 L727 192 L783.7 192 L840.3 192 L897 192"/&gt;
+    &lt;path class="l2" d="M47 138 L103.7 136.2 L160.3 138 L217 134.4 L273.7 120 L330.3 19.2 L387 12 L443.7 12 L500.3 12 L557 12 L613.7 12 L670.3 66 L727 130.8 L783.7 136.2 L840.3 138 L897 138"/&gt;
+  &lt;/svg&gt;
+  &lt;figcaption&gt;&lt;b&gt;Figure 3.&lt;/b&gt; Error rate and connection use, 12 September 2026, 13:30 to 15:30 UTC. Connections is shown as percent of the 100 limit. The dashed line marks the deploy at 14:00.&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre>
+  </details>
+</section>
+
+<section id="kv">
+  <h2>Key-value metadata</h2>
+  <p>A definition list for facts about the thing the page is about: environment, versions, owners, ticket numbers. Labels left in small sans, values right in body text. It stacks on narrow screens.</p>
+  <!-- component: kv -->
+  <dl class="kv">
+    <dt>Service</dt><dd>ingest-api, version 2026.09.1</dd>
+    <dt>Environment</dt><dd>production, eu-west-1</dd>
+    <dt>Window</dt><dd>2026-09-12 14:07 to 14:48 UTC</dd>
+    <dt>Ticket</dt><dd><a href="https://example.com/INC-231">INC-231</a></dd>
+    <dt>Owner</dt><dd>Laurent Gonzalez</dd>
+  </dl>
+  <!-- /component: kv -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;dl class="kv"&gt;
+  &lt;dt&gt;Service&lt;/dt&gt;&lt;dd&gt;ingest-api, version 2026.09.1&lt;/dd&gt;
+  &lt;dt&gt;Environment&lt;/dt&gt;&lt;dd&gt;production, eu-west-1&lt;/dd&gt;
+  &lt;dt&gt;Window&lt;/dt&gt;&lt;dd&gt;2026-09-12 14:07 to 14:48 UTC&lt;/dd&gt;
+  &lt;dt&gt;Ticket&lt;/dt&gt;&lt;dd&gt;&lt;a href="https://example.com/INC-231"&gt;INC-231&lt;/a&gt;&lt;/dd&gt;
+  &lt;dt&gt;Owner&lt;/dt&gt;&lt;dd&gt;Laurent Gonzalez&lt;/dd&gt;
+&lt;/dl&gt;</code></pre>
+  </details>
+</section>
+
+<section id="details">
+  <h2>Disclosure</h2>
+  <p>For material a reader can skip: raw logs, long method notes, the full query. The summary line says what is inside and roughly how much. Do not hide the conclusion or anything a skimming reader needs. Consecutive disclosures share their rules.</p>
+  <!-- component: details -->
+      <details>
+        <summary>Full query used for the connection counts (12 lines)</summary>
+        <pre><code>SELECT application_name, state, count(*)
+  FROM pg_stat_activity
+  WHERE datname = 'ingest'
+  GROUP BY 1, 2
+  ORDER BY 3 DESC;</code></pre>
+      </details>
+      <details>
+        <summary>Why not just raise max_connections?</summary>
+        <p>Each Postgres connection costs a backend process and roughly 10 MB of memory. Raising the limit from 100 to 300 would have bought time but the box has 4 GB, and the worker count was the actual mistake.</p>
+      </details>
+  <!-- /component: details -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>    &lt;details&gt;
+      &lt;summary&gt;Full query used for the connection counts (12 lines)&lt;/summary&gt;
+      &lt;pre&gt;&lt;code&gt;SELECT application_name, state, count(*)
+FROM pg_stat_activity
+WHERE datname = 'ingest'
+GROUP BY 1, 2
+ORDER BY 3 DESC;&lt;/code&gt;&lt;/pre&gt;
+    &lt;/details&gt;
+    &lt;details&gt;
+      &lt;summary&gt;Why not just raise max_connections?&lt;/summary&gt;
+      &lt;p&gt;Each Postgres connection costs a backend process and roughly 10 MB of memory. Raising the limit from 100 to 300 would have bought time but the box has 4 GB, and the worker count was the actual mistake.&lt;/p&gt;
+    &lt;/details&gt;</code></pre>
+  </details>
+</section>
+
+<section id="tabs">
+  <h2>Tabs</h2>
+  <p>Tabs are for the same data cut different ways (by region, by month), not for hiding sections. Without JS the panels simply follow each other with their headings, so each panel must make sense on its own. Put an h3 first in each panel; JS turns it into the tab label.</p>
+  <!-- component: tabs -->
+  <div class="tabs" id="cut">
+    <section class="tabpanel">
+      <h3>By service</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Service</th><th class="num">Failed requests</th></tr></thead>
+        <tbody>
+          <tr><td>ingest-api</td><td class="num">17,900</td></tr>
+          <tr><td>sync-worker</td><td class="num">500</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="tabpanel">
+      <h3>By customer tier</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tier</th><th class="num">Failed requests</th></tr></thead>
+        <tbody>
+          <tr><td>Enterprise</td><td class="num">11,200</td></tr>
+          <tr><td>Standard</td><td class="num">7,200</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+  <!-- /component: tabs -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;div class="tabs" id="cut"&gt;
+  &lt;section class="tabpanel"&gt;
+    &lt;h3&gt;By service&lt;/h3&gt;
+    &lt;div class="table-wrap"&gt;&lt;table&gt;
+      &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Service&lt;/th&gt;&lt;th class="num"&gt;Failed requests&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;ingest-api&lt;/td&gt;&lt;td class="num"&gt;17,900&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;sync-worker&lt;/td&gt;&lt;td class="num"&gt;500&lt;/td&gt;&lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;&lt;/div&gt;
+  &lt;/section&gt;
+  &lt;section class="tabpanel"&gt;
+    &lt;h3&gt;By customer tier&lt;/h3&gt;
+    &lt;div class="table-wrap"&gt;&lt;table&gt;
+      &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Tier&lt;/th&gt;&lt;th class="num"&gt;Failed requests&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;Enterprise&lt;/td&gt;&lt;td class="num"&gt;11,200&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;Standard&lt;/td&gt;&lt;td class="num"&gt;7,200&lt;/td&gt;&lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;&lt;/div&gt;
+  &lt;/section&gt;
+&lt;/div&gt;</code></pre>
+  </details>
+</section>
+
+<section id="steps">
+  <h2>Steps and timeline</h2>
+  <p>Steps are a numbered process where order matters (a runbook, a rollout plan). A timeline is what happened when: the time on the left in a fixed column, the event on the right, in UTC unless the page says otherwise. Both use rules, not cards.</p>
+  <!-- component: steps -->
+  <ol class="steps">
+    <li><p>Deploy PgBouncer next to the primary in transaction mode with <code>default_pool_size = 20</code>.</p></li>
+    <li><p>Point ingest-api at the bouncer port and cut <code>WORKERS</code> to 8.</p></li>
+    <li><p>Watch <code>pgbouncer_pools_client_waiting</code> for a day before touching sync-worker.</p></li>
+  </ol>
+  <ol class="timeline">
+    <li><span class="when">14:00 UTC</span><p>Deploy of ingest-api 2026.09.1 starts (workers 8 to 24).</p></li>
+    <li><span class="when">14:07</span><p>First <code>pool exhausted</code> errors; 5xx rate climbs past 30%.</p></li>
+    <li><span class="when">14:21</span><p>Alert pages on-call. The 10-minute window explains the delay.</p></li>
+    <li><span class="when">14:33</span><p>Rollback started after a short detour through "is it the database?".</p></li>
+    <li><span class="when">14:48</span><p>Error rate back to baseline. Incident closed at 15:10.</p></li>
+  </ol>
+  <!-- /component: steps -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;ol class="steps"&gt;
+  &lt;li&gt;&lt;p&gt;Deploy PgBouncer next to the primary in transaction mode with &lt;code&gt;default_pool_size = 20&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Point ingest-api at the bouncer port and cut &lt;code&gt;WORKERS&lt;/code&gt; to 8.&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;p&gt;Watch &lt;code&gt;pgbouncer_pools_client_waiting&lt;/code&gt; for a day before touching sync-worker.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ol class="timeline"&gt;
+  &lt;li&gt;&lt;span class="when"&gt;14:00 UTC&lt;/span&gt;&lt;p&gt;Deploy of ingest-api 2026.09.1 starts (workers 8 to 24).&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;span class="when"&gt;14:07&lt;/span&gt;&lt;p&gt;First &lt;code&gt;pool exhausted&lt;/code&gt; errors; 5xx rate climbs past 30%.&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;span class="when"&gt;14:21&lt;/span&gt;&lt;p&gt;Alert pages on-call. The 10-minute window explains the delay.&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;span class="when"&gt;14:33&lt;/span&gt;&lt;p&gt;Rollback started after a short detour through "is it the database?".&lt;/p&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;span class="when"&gt;14:48&lt;/span&gt;&lt;p&gt;Error rate back to baseline. Incident closed at 15:10.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;</code></pre>
+  </details>
+</section>
+
+<section id="sources">
+  <h2>Footnotes and sources</h2>
+  <p>Reference sources with a footnote number in the text and a numbered list at the end of the page under a "Sources" heading. Each entry says what the source is and where; link it if the reader can open it. Internal dashboards and tickets go here too, as plain text if they are not reachable from a link.</p>
+  <!-- component: sources -->
+  <p>Postgres allocates one backend process per connection,<sup class="fn" id="ref1"><a href="#src1">1</a></sup> which is why the limit is low by default.</p>
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li id="src1">PostgreSQL documentation, "Connections and Authentication", <a href="https://www.postgresql.org/docs/current/runtime-config-connection.html">postgresql.org</a>.</li>
+    <li>Grafana, dashboard "ingest-api / overview", panels "5xx rate" and "pg connections", 12 September 2026.</li>
+    <li>Incident ticket INC-231 and the deploy log for release 2026.09.1.</li>
+  </ol>
+  <!-- /component: sources -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;p&gt;Postgres allocates one backend process per connection,&lt;sup class="fn" id="ref1"&gt;&lt;a href="#src1"&gt;1&lt;/a&gt;&lt;/sup&gt; which is why the limit is low by default.&lt;/p&gt;
+&lt;h2&gt;Sources&lt;/h2&gt;
+&lt;ol class="sources"&gt;
+  &lt;li id="src1"&gt;PostgreSQL documentation, "Connections and Authentication", &lt;a href="https://www.postgresql.org/docs/current/runtime-config-connection.html"&gt;postgresql.org&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;Grafana, dashboard "ingest-api / overview", panels "5xx rate" and "pg connections", 12 September 2026.&lt;/li&gt;
+  &lt;li&gt;Incident ticket INC-231 and the deploy log for release 2026.09.1.&lt;/li&gt;
+&lt;/ol&gt;</code></pre>
+  </details>
+</section>
+
+<section id="dividers">
+  <h2>Dividers</h2>
+  <p>A horizontal rule separates parts of a page that are not separate sections, for example the end of the findings and the start of the appendix. Headings already separate sections; do not put a rule under every heading.</p>
+  <!-- component: dividers -->
+  <p>End of the findings.</p>
+  <hr>
+  <p>Appendix material starts here.</p>
+  <!-- /component: dividers -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;p&gt;End of the findings.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;Appendix material starts here.&lt;/p&gt;</code></pre>
+  </details>
+</section>
+
+<section id="controls">
+  <h2>Inputs and controls</h2>
+  <p>Controls exist only for in-page interaction: filtering a table, a small calculator, toggling a view. Forms cannot submit anywhere. Label every control. The primary button is for the one main action; everything else is secondary. Keep the whole form on one line with <code>.form-inline</code> when it is three or four fields; use stacked <code>.field</code> blocks for more.</p>
+  <!-- component: controls -->
+  <div class="form-inline">
+    <div class="field grow">
+      <label for="q">Filter endpoints</label>
+      <input type="search" id="q" data-filter="#endpoints" placeholder="Type to filter the table above">
+    </div>
+    <div class="field">
+      <label for="region">Region</label>
+      <select id="region">
+        <option>All regions</option>
+        <option>eu-west-1</option>
+        <option>us-east-1</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="min">Min requests</label>
+      <input type="number" id="min" value="1000" min="0" step="1000">
+    </div>
+    <button type="button" class="btn btn-primary">Apply</button>
+    <button type="button" class="btn">Reset</button>
+  </div>
+  <div class="form-inline">
+    <label class="check"><input type="checkbox" checked> Include health checks</label>
+    <label class="check"><input type="radio" name="unit" checked> Milliseconds</label>
+    <label class="check"><input type="radio" name="unit"> Seconds</label>
+    <label class="check"><input type="checkbox" class="switch" checked> Show trend</label>
+  </div>
+  <div class="form-inline" id="calc">
+    <div class="field">
+      <label for="pods">Pods</label>
+      <input type="number" id="pods" value="3" min="1">
+    </div>
+    <div class="field">
+      <label for="workers">Workers per pod</label>
+      <input type="number" id="workers" value="24" min="1">
+    </div>
+    <div class="field">
+      <label for="limit">Postgres limit</label>
+      <input type="number" id="limit" value="100" min="1">
+    </div>
+    <p class="field"><span class="muted">Pool use</span><output id="use" for="pods workers limit">72 of 100 (72%)</output></p>
+  </div>
+  <script>
+  (function () {
+    try {
+      var ids = ['pods', 'workers', 'limit'], out = document.getElementById('use');
+      function calc() {
+        var v = ids.map(function (id) { return Number(document.getElementById(id).value) || 0; });
+        var used = v[0] * v[1];
+        out.textContent = used.toLocaleString('en-US') + ' of ' + v[2].toLocaleString('en-US') + ' (' + Math.round(100 * used / (v[2] || 1)) + '%)';
+        out.className = used > v[2] ? 'delta-bad' : '';
+      }
+      ids.forEach(function (id) { document.getElementById(id).addEventListener('input', calc); });
+      calc();
+    } catch (e) {}
+  })();
+  </script>
+  <!-- /component: controls -->
+  <p>The search field above filters the endpoint table in the table variants section (the base script wires any <code>input[data-filter]</code> to the table it points at). The calculator is a page-specific script of a dozen lines; write your own, inline, in a try/catch, with the result already present in the HTML so the page reads without JS.</p>
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;div class="form-inline"&gt;
+  &lt;div class="field grow"&gt;
+    &lt;label for="q"&gt;Filter endpoints&lt;/label&gt;
+    &lt;input type="search" id="q" data-filter="#endpoints" placeholder="Type to filter the table above"&gt;
+  &lt;/div&gt;
+  &lt;div class="field"&gt;
+    &lt;label for="region"&gt;Region&lt;/label&gt;
+    &lt;select id="region"&gt;
+      &lt;option&gt;All regions&lt;/option&gt;
+      &lt;option&gt;eu-west-1&lt;/option&gt;
+      &lt;option&gt;us-east-1&lt;/option&gt;
+    &lt;/select&gt;
+  &lt;/div&gt;
+  &lt;div class="field"&gt;
+    &lt;label for="min"&gt;Min requests&lt;/label&gt;
+    &lt;input type="number" id="min" value="1000" min="0" step="1000"&gt;
+  &lt;/div&gt;
+  &lt;button type="button" class="btn btn-primary"&gt;Apply&lt;/button&gt;
+  &lt;button type="button" class="btn"&gt;Reset&lt;/button&gt;
+&lt;/div&gt;
+&lt;div class="form-inline"&gt;
+  &lt;label class="check"&gt;&lt;input type="checkbox" checked&gt; Include health checks&lt;/label&gt;
+  &lt;label class="check"&gt;&lt;input type="radio" name="unit" checked&gt; Milliseconds&lt;/label&gt;
+  &lt;label class="check"&gt;&lt;input type="radio" name="unit"&gt; Seconds&lt;/label&gt;
+  &lt;label class="check"&gt;&lt;input type="checkbox" class="switch" checked&gt; Show trend&lt;/label&gt;
+&lt;/div&gt;
+&lt;div class="form-inline" id="calc"&gt;
+  &lt;div class="field"&gt;
+    &lt;label for="pods"&gt;Pods&lt;/label&gt;
+    &lt;input type="number" id="pods" value="3" min="1"&gt;
+  &lt;/div&gt;
+  &lt;div class="field"&gt;
+    &lt;label for="workers"&gt;Workers per pod&lt;/label&gt;
+    &lt;input type="number" id="workers" value="24" min="1"&gt;
+  &lt;/div&gt;
+  &lt;div class="field"&gt;
+    &lt;label for="limit"&gt;Postgres limit&lt;/label&gt;
+    &lt;input type="number" id="limit" value="100" min="1"&gt;
+  &lt;/div&gt;
+  &lt;p class="field"&gt;&lt;span class="muted"&gt;Pool use&lt;/span&gt;&lt;output id="use" for="pods workers limit"&gt;72 of 100 (72%)&lt;/output&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;script&gt;
+(function () {
+  try {
+    var ids = ['pods', 'workers', 'limit'], out = document.getElementById('use');
+    function calc() {
+      var v = ids.map(function (id) { return Number(document.getElementById(id).value) || 0; });
+      var used = v[0] * v[1];
+      out.textContent = used.toLocaleString('en-US') + ' of ' + v[2].toLocaleString('en-US') + ' (' + Math.round(100 * used / (v[2] || 1)) + '%)';
+      out.className = used &gt; v[2] ? 'delta-bad' : '';
+    }
+    ids.forEach(function (id) { document.getElementById(id).addEventListener('input', calc); });
+    calc();
+  } catch (e) {}
+})();
+&lt;/script&gt;</code></pre>
+  </details>
+</section>
+
+<section id="layout">
+  <h2>Layout: measure and wide</h2>
+  <p>Prose sits in a centered column at the measure (38rem). Anything with <code>.wide</code> spans the full column (58rem), centered on the same axis, so wide tables and figures look deliberate rather than overflowing. On a phone both are the same width. Do not nest wide inside wide, and do not put prose in a wide element.</p>
+  <!-- component: layout -->
+  <p>This paragraph is at the measure.</p>
+  <div class="wide" style="border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); padding: var(--s2) 0; font-family: var(--font-ui); font-size: var(--small); color: var(--ink-3); text-align: center;">This block is wide.</div>
+  <p>And prose returns to the measure. (The inline style above exists only to make the wide box visible; do not write inline styles in a manifest.)</p>
+  <!-- /component: layout -->
+  <details>
+    <summary>Markup</summary>
+    <pre><code>&lt;p&gt;This paragraph is at the measure.&lt;/p&gt;
+&lt;div class="wide" style="border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); padding: var(--s2) 0; font-family: var(--font-ui); font-size: var(--small); color: var(--ink-3); text-align: center;"&gt;This block is wide.&lt;/div&gt;
+&lt;p&gt;And prose returns to the measure. (The inline style above exists only to make the wide box visible; do not write inline styles in a manifest.)&lt;/p&gt;</code></pre>
+  </details>
+</section>
+</main>
+
+<footer class="doc-footer">
+  <p>Quire is the design language for manifests. Tokens and rules: <code>design/DESIGN.md</code>. Template: <code>templates/base.html</code>.</p>
+</footer>
+
+<script>
+/* Optional enhancements: tabs, table filter, sortable tables. The page reads
+   fully without them. Never touch web storage, cookies or client-side
+   databases here: the page runs in a sandboxed origin and they throw. */
+(function () {
+  'use strict';
+  try {
+    document.documentElement.classList.add('js');
+
+    /* Safety net: wrap any bare table so it scrolls sideways on narrow screens instead of widening the page. */
+    document.querySelectorAll('table').forEach(function (t) {
+      if (t.parentElement.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap' + (t.classList.contains('wide') ? ' wide' : '');
+      t.classList.remove('wide');
+      t.parentNode.insertBefore(w, t);
+      w.appendChild(t);
+    });
+
+    /* Tabs: <div class="tabs"> containing <section class="tabpanel"> each with an h3 (or data-label). */
+    document.querySelectorAll('.tabs').forEach(function (tabs, g) {
+      var panels = Array.prototype.slice.call(tabs.children).filter(function (el) { return el.classList.contains('tabpanel'); });
+      if (panels.length < 2) return;
+      var list = document.createElement('div');
+      list.className = 'tablist';
+      list.setAttribute('role', 'tablist');
+      var buttons = panels.map(function (panel, i) {
+        var heading = panel.querySelector('h2, h3, h4');
+        var label = panel.getAttribute('data-label') || (heading ? heading.textContent : 'Tab ' + (i + 1));
+        var id = panel.id || (tabs.id || 'tabs' + (g + 1)) + '-' + (i + 1);
+        panel.id = id;
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('tabindex', '0');
+        if (heading && heading === panel.firstElementChild) heading.classList.add('tab-heading');
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tab';
+        b.id = id + '-tab';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-controls', id);
+        b.textContent = label;
+        panel.setAttribute('aria-labelledby', b.id);
+        b.addEventListener('click', function () { select(i); });
+        b.addEventListener('keydown', function (e) {
+          var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!d) return;
+          e.preventDefault();
+          var n = (i + d + panels.length) % panels.length;
+          select(n);
+          buttons[n].focus();
+        });
+        list.appendChild(b);
+        return b;
+      });
+      function select(n) {
+        panels.forEach(function (p, j) { p.hidden = j !== n; });
+        buttons.forEach(function (b, j) {
+          b.setAttribute('aria-selected', j === n ? 'true' : 'false');
+          b.tabIndex = j === n ? 0 : -1;
+        });
+      }
+      tabs.insertBefore(list, panels[0]);
+      select(0);
+    });
+
+    /* Table filter: <input type="search" data-filter="#table-id">. A <tr class="empty"> row, if present, shows when nothing matches. */
+    document.querySelectorAll('input[data-filter]').forEach(function (input) {
+      var table = document.querySelector(input.getAttribute('data-filter'));
+      if (!table) return;
+      var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+      var empty = table.querySelector('tr.empty');
+      if (empty) empty.hidden = true;
+      input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        rows.forEach(function (r) {
+          if (r === empty) return;
+          var hit = !q || r.textContent.toLowerCase().indexOf(q) !== -1;
+          r.hidden = !hit;
+          if (hit) shown++;
+        });
+        if (empty) empty.hidden = shown > 0;
+      });
+    });
+
+    /* Sortable tables: <table class="sortable">. Click a header to sort; columns with th.num sort numerically. tr.total stays last. */
+    document.querySelectorAll('table.sortable').forEach(function (table) {
+      var tbody = table.tBodies[0];
+      if (!tbody) return;
+      var heads = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+      heads.forEach(function (th, col) {
+        th.tabIndex = 0;
+        th.classList.add('sort');
+        th.setAttribute('aria-sort', 'none');
+        function num(s) { return parseFloat(s.replace(/−/g, '-').replace(/[^0-9.\-]/g, '')) || 0; }
+        function sort() {
+          var dir = th.getAttribute('aria-sort') === 'ascending' ? -1 : 1;
+          var numeric = th.classList.contains('num');
+          var rows = Array.prototype.slice.call(tbody.rows).filter(function (r) { return !r.classList.contains('total') && !r.classList.contains('empty'); });
+          rows.sort(function (a, b) {
+            var x = a.cells[col] ? a.cells[col].textContent.trim() : '';
+            var y = b.cells[col] ? b.cells[col].textContent.trim() : '';
+            if (numeric) return (num(x) - num(y)) * dir;
+            return x.localeCompare(y, undefined, { numeric: true }) * dir;
+          });
+          rows.forEach(function (r) { tbody.appendChild(r); });
+          Array.prototype.forEach.call(tbody.querySelectorAll('tr.total, tr.empty'), function (r) { tbody.appendChild(r); });
+          heads.forEach(function (o) { o.setAttribute('aria-sort', 'none'); });
+          th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
+        }
+        th.addEventListener('click', sort);
+        th.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sort(); } });
+      });
+    });
+  } catch (e) { /* enhancements are optional */ }
+})();
+</script>
+</body>
+</html>
